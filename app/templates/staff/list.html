@@ -1,0 +1,221 @@
+
+{% extends "base.html" %}
+
+{% block title %}Staff Directory{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary px-3 py-2 mb-2">
+                <i class="bi bi-people me-1"></i>
+                Human Resources
+            </span>
+            <h2 class="fw-bold mb-1">Staff Directory</h2>
+            <p class="text-muted mb-0">
+                View hospital employees, designations, departments, and assigned shifts.
+            </p>
+        </div>
+
+        <div class="border rounded-4 bg-white shadow-sm px-4 py-3">
+            <div class="small text-muted">Staff Members</div>
+            <div class="fs-3 fw-bold">{{ staff_list|length }}</div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3">
+                        <i class="bi bi-person-vcard fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Employees Listed</div>
+                        <div class="fs-3 fw-bold">{{ staff_list|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-success bg-opacity-10 text-success p-3">
+                        <i class="bi bi-building fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Departments Represented</div>
+                        <div class="fs-3 fw-bold" id="departmentCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom p-3 p-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Employee Register</h5>
+                    <p class="text-muted small mb-0">
+                        Staff identity, designation, department, and shift
+                    </p>
+                </div>
+
+                <div class="input-group" style="max-width: 340px;">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="search"
+                        id="staffSearch"
+                        class="form-control bg-light border-start-0"
+                        placeholder="Search staff..."
+                        aria-label="Search staff directory">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="staffTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 px-md-4 py-3">Employee ID</th>
+                        <th class="py-3">Staff Member</th>
+                        <th class="py-3">Designation</th>
+                        <th class="py-3">Department</th>
+                        <th class="py-3">Shift</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for s in staff_list %}
+                    <tr>
+                        <td class="px-3 px-md-4">
+                            <span class="badge bg-light text-dark border font-monospace px-3 py-2">
+                                {{ s.employee_id or '—' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary
+                                            d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 44px; height: 44px;">
+                                    <i class="bi bi-person-badge fs-5"></i>
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ s.user.full_name if s.user else 'Name not available' }}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="fw-medium">
+                                {{ s.designation or 'Not specified' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if s.department %}
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-dark border px-3 py-2">
+                                <i class="bi bi-building me-1"></i>
+                                {{ s.department.name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="text-secondary text-nowrap">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ s.shift or 'Not specified' }}
+                            </span>
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center
+                                        justify-content-center mb-3"
+                                 style="width: 76px; height: 76px;">
+                                <i class="bi bi-people text-secondary fs-2"></i>
+                            </div>
+                            <h6 class="fw-bold">No Staff Records Found</h6>
+                            <p class="text-muted small mb-0">
+                                No staff members are currently available in the directory.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white border-top px-3 px-md-4 py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="text-muted small" id="staffCount">
+                    Showing {{ staff_list|length }} staff member(s)
+                </span>
+                <span class="text-muted small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    City Care Hospital
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client-Side Search and Department Summary -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("staffSearch");
+    const table = document.getElementById("staffTable");
+    const countLabel = document.getElementById("staffCount");
+    const departmentCount = document.getElementById("departmentCount");
+
+    if (!searchInput || !table || !countLabel) return;
+
+    const rows = Array.from(table.querySelectorAll("tbody tr"))
+        .filter(row => !row.querySelector("td[colspan]"));
+
+    const departments = new Set();
+
+    rows.forEach(function (row) {
+        const departmentCell = row.cells[3];
+        if (departmentCell) {
+            const name = departmentCell.textContent.trim();
+            if (name && name !== "Not assigned") {
+                departments.add(name);
+            }
+        }
+    });
+
+    if (departmentCount) {
+        departmentCount.textContent = departments.size;
+    }
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleCount++;
+        });
+
+        countLabel.textContent =
+            "Showing " + visibleCount + " staff member(s)";
+    });
+});
+</script>
+{% endblock %}

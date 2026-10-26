@@ -1,0 +1,447 @@
+
+{% extends "base.html" %}
+
+{% block title %}Book Appointment | City Care Hospital{% endblock %}
+
+{% block content %}
+<div class="appointment-booking-page">
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="booking-heading-icon">
+                    <i class="bi bi-calendar2-plus-fill"></i>
+                </span>
+                <h1 class="h3 fw-bold mb-0">Book Appointment</h1>
+            </div>
+            <p class="text-muted mb-0">
+                Schedule a patient consultation with the appropriate doctor.
+            </p>
+        </div>
+
+        <a href="{{ url_for('appointments.list_appointments') }}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Appointments
+        </a>
+    </div>
+
+    <!-- Information Banner -->
+    <div class="booking-info-banner mb-4">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            <div class="fw-semibold">Appointment Registration</div>
+            <div class="small">
+                Fields marked with <span class="text-danger">*</span> are required.
+                Please verify the patient, doctor, date and time before submitting.
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="bookAppointmentForm">
+
+        <!-- Patient and Doctor -->
+        <div class="card booking-section-card mb-4">
+            <div class="card-header booking-section-header">
+                <div class="booking-section-icon icon-blue">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Patient & Doctor</h2>
+                    <p class="text-muted small mb-0">
+                        Select the patient and healthcare professional
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6">
+                        <label for="patient_id" class="form-label">
+                            Patient <span class="text-danger">*</span>
+                        </label>
+                        <select name="patient_id" id="patient_id"
+                                class="form-select" required>
+                            <option value="">Select Patient</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}"
+                                {% if request.args.get('patient') == (p.id|string) %}selected{% endif %}>
+                                {{ p.full_name }} ({{ p.uhid or 'No UHID' }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Choose the registered patient.</div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="doctor_id" class="form-label">
+                            Doctor <span class="text-danger">*</span>
+                        </label>
+                        <select name="doctor_id" id="doctor_id"
+                                class="form-select" required>
+                            <option value="">Select Doctor</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">
+                                {{ d.user.full_name if d.user else d.id }}
+                                {% if d.specialization %} — {{ d.specialization }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Choose the doctor for this consultation.</div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="department_id" class="form-label">Department</label>
+                        <select name="department_id" id="department_id" class="form-select">
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="appointment_type" class="form-label">Appointment Type</label>
+                        <select name="appointment_type" id="appointment_type" class="form-select">
+                            <option value="OPD">OPD Consultation</option>
+                            <option value="Follow-up">Follow-up Visit</option>
+                            <option value="Emergency">Emergency</option>
+                            <option value="Telemedicine">Telemedicine</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="card booking-section-card mb-4">
+            <div class="card-header booking-section-header">
+                <div class="booking-section-icon icon-green">
+                    <i class="bi bi-calendar-week-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Appointment Schedule</h2>
+                    <p class="text-muted small mb-0">
+                        Choose the date and time of the appointment
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6">
+                        <label for="appointment_date" class="form-label">
+                            Appointment Date <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-calendar3"></i>
+                            </span>
+                            <input type="date" name="appointment_date"
+                                   id="appointment_date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="appointment_time" class="form-label">
+                            Appointment Time <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-clock"></i>
+                            </span>
+                            <input type="time" name="appointment_time"
+                                   id="appointment_time" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="booking-schedule-note">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            Please confirm doctor availability before finalizing the appointment.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Visit Details -->
+        <div class="card booking-section-card mb-4">
+            <div class="card-header booking-section-header">
+                <div class="booking-section-icon icon-purple">
+                    <i class="bi bi-clipboard2-pulse-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Visit Details</h2>
+                    <p class="text-muted small mb-0">
+                        Reason for consultation and walk-in information
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12">
+                        <label for="reason" class="form-label">Reason for Visit</label>
+                        <textarea name="reason" id="reason" class="form-control"
+                                  rows="4"
+                                  placeholder="Briefly describe the reason for the consultation..."></textarea>
+                        <div class="form-text">
+                            Avoid including unnecessary sensitive information in this field.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="walkin-option">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="booking-section-icon icon-orange">
+                                    <i class="bi bi-person-walking"></i>
+                                </div>
+                                <div>
+                                    <label for="walkin" class="fw-semibold mb-1">
+                                        Walk-in Patient
+                                    </label>
+                                    <p class="text-muted small mb-0">
+                                        Enable this if the patient is visiting without a prior scheduled booking.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch ms-3">
+                                <input type="checkbox" name="is_walk_in"
+                                       class="form-check-input" id="walkin" value="on">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="booking-actions">
+            <div class="small text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Review appointment details before saving.
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('appointments.list_appointments') }}"
+                   class="btn btn-outline-secondary px-4">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-calendar-check me-2"></i>Book Appointment
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<style>
+.appointment-booking-page {
+    color: #1e293b;
+}
+
+.booking-heading-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #e8f1ff;
+    color: #2865b5;
+    font-size: 1.3rem;
+}
+
+.booking-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 16px 18px;
+    border: 1px solid #dce8f7;
+    border-radius: 12px;
+    background: #f4f8ff;
+    color: #496585;
+}
+
+.booking-info-banner > i {
+    margin-top: 2px;
+    color: #2865b5;
+    font-size: 1.2rem;
+}
+
+.booking-section-card {
+    overflow: hidden;
+    border: 1px solid #e6ebf2;
+    border-radius: 14px;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, .035);
+}
+
+.booking-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.booking-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    font-size: 1.15rem;
+}
+
+.icon-blue { background: #e8f1ff; color: #2865b5; }
+.icon-green { background: #e9f8ef; color: #16804a; }
+.icon-purple { background: #f1eaff; color: #7650bb; }
+.icon-orange { background: #fff1e6; color: #bd641b; }
+
+.appointment-booking-page .form-label {
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.appointment-booking-page .form-control,
+.appointment-booking-page .form-select,
+.appointment-booking-page .input-group-text {
+    min-height: 44px;
+    border-color: #dce3ec;
+    border-radius: 9px;
+    font-size: .9rem;
+}
+
+.appointment-booking-page .input-group-text {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.appointment-booking-page .input-group .input-group-text {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.appointment-booking-page .input-group .form-control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.appointment-booking-page textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.appointment-booking-page .form-control:focus,
+.appointment-booking-page .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .1);
+}
+
+.appointment-booking-page .form-text {
+    color: #7b8798;
+    font-size: .77rem;
+}
+
+.booking-schedule-note {
+    padding: 12px 14px;
+    border-radius: 9px;
+    background: #fff8e9;
+    color: #8a6417;
+    font-size: .82rem;
+}
+
+.walkin-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #e6ebf2;
+    border-radius: 12px;
+    background: #fafbfd;
+}
+
+.walkin-option .form-check-input {
+    width: 2.5em;
+    height: 1.3em;
+    cursor: pointer;
+}
+
+.booking-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 1px solid #e6ebf2;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, .045);
+    backdrop-filter: blur(8px);
+}
+
+@media (max-width: 575.98px) {
+    .appointment-booking-page h1 {
+        font-size: 1.4rem;
+    }
+
+    .booking-section-header {
+        padding: 14px;
+    }
+
+    .appointment-booking-page .card-body {
+        padding: 16px !important;
+    }
+
+    .booking-actions {
+        align-items: stretch;
+        padding: 13px;
+    }
+
+    .booking-actions > div:last-child {
+        width: 100%;
+    }
+
+    .booking-actions .btn {
+        flex: 1;
+    }
+}
+</style>
+
+<script>
+(function () {
+    const dateInput = document.getElementById('appointment_date');
+
+    if (dateInput) {
+        const now = new Date();
+        const localToday = [
+            now.getFullYear(),
+            String(now.getMonth() + 1).padStart(2, '0'),
+            String(now.getDate()).padStart(2, '0')
+        ].join('-');
+
+        dateInput.min = localToday;
+    }
+})();
+</script>
+{% endblock %}

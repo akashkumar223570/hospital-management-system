@@ -1,0 +1,819 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ patient.full_name }} | Patient Profile{% endblock %}
+
+{% block content %}
+<div class="patient-profile-page">
+
+    <!-- Profile Header -->
+    <div class="profile-header-card mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="profile-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h1 class="h3 fw-bold mb-0">{{ patient.full_name }}</h1>
+                        <span class="profile-active-badge">
+                            <i class="bi bi-check-circle-fill me-1"></i>Registered Patient
+                        </span>
+                    </div>
+                    <div class="profile-meta mt-2">
+                        <span><i class="bi bi-person-vcard me-1"></i>{{ patient.uhid or 'UHID unavailable' }}</span>
+                        <span><i class="bi bi-person me-1"></i>{{ patient.gender or '-' }}</span>
+                        <span><i class="bi bi-calendar3 me-1"></i>{{ patient.age if patient.age is not none else '-' }}{% if patient.age is not none %} years{% endif %}</span>
+                        <span><i class="bi bi-droplet-fill me-1"></i>{{ patient.blood_group or 'Blood group N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('patients.list_patients') }}"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Patients
+                </a>
+                <a href="{{ url_for('patients.edit', id=patient.id) }}"
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-square me-1"></i>Edit Profile
+                </a>
+                <a href="{{ url_for('appointments.book') }}?patient={{ patient.id }}"
+                   class="btn btn-primary">
+                    <i class="bi bi-calendar-plus me-1"></i>Book Appointment
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+            <div class="profile-stat-card">
+                <div class="profile-stat-icon stat-blue">
+                    <i class="bi bi-telephone-fill"></i>
+                </div>
+                <div>
+                    <div class="profile-stat-label">Phone Number</div>
+                    <div class="profile-stat-value">{{ patient.phone or '-' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="profile-stat-card">
+                <div class="profile-stat-icon stat-red">
+                    <i class="bi bi-droplet-fill"></i>
+                </div>
+                <div>
+                    <div class="profile-stat-label">Blood Group</div>
+                    <div class="profile-stat-value">{{ patient.blood_group or 'Not recorded' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="profile-stat-card">
+                <div class="profile-stat-icon stat-green">
+                    <i class="bi bi-calendar-heart"></i>
+                </div>
+                <div>
+                    <div class="profile-stat-label">Date of Birth</div>
+                    <div class="profile-stat-value">
+                        {{ patient.date_of_birth.strftime('%d %b %Y') if patient.date_of_birth else '-' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="profile-stat-card">
+                <div class="profile-stat-icon stat-purple">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <div class="profile-stat-label">Insurance</div>
+                    <div class="profile-stat-value">
+                        {{ patient.insurance_provider or 'Not recorded' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Left Column -->
+        <div class="col-12 col-xl-4">
+
+            <!-- Contact Information -->
+            <div class="card profile-section-card mb-4">
+                <div class="card-header profile-section-header">
+                    <div class="section-icon icon-blue">
+                        <i class="bi bi-person-lines-fill"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 fw-bold mb-1">Contact Information</h2>
+                        <p class="text-muted small mb-0">Personal and address details</p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-telephone"></i></div>
+                        <div>
+                            <div class="profile-info-label">Phone</div>
+                            <div class="profile-info-value">{{ patient.phone or '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-envelope"></i></div>
+                        <div>
+                            <div class="profile-info-label">Email Address</div>
+                            <div class="profile-info-value text-break">{{ patient.email or '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-geo-alt"></i></div>
+                        <div>
+                            <div class="profile-info-label">Address</div>
+                            <div class="profile-info-value">
+                                {{ patient.address or '' }}
+                                {% if patient.city %}{{ patient.city }}{% endif %}
+                                {% if patient.state %}, {{ patient.state }}{% endif %}
+                                {% if patient.pincode %} - {{ patient.pincode }}{% endif %}
+                                {% if not patient.address and not patient.city and not patient.state and not patient.pincode %}-{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div class="card profile-section-card mb-4">
+                <div class="card-header profile-section-header">
+                    <div class="section-icon icon-orange">
+                        <i class="bi bi-telephone-forward-fill"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 fw-bold mb-1">Emergency Contact</h2>
+                        <p class="text-muted small mb-0">Contact in case of emergency</p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-person"></i></div>
+                        <div>
+                            <div class="profile-info-label">Contact Person</div>
+                            <div class="profile-info-value">{{ patient.emergency_contact_name or '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-telephone"></i></div>
+                        <div>
+                            <div class="profile-info-label">Phone Number</div>
+                            <div class="profile-info-value">{{ patient.emergency_contact_phone or '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-people"></i></div>
+                        <div>
+                            <div class="profile-info-label">Relationship</div>
+                            <div class="profile-info-value">{{ patient.emergency_contact_relation or '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Information -->
+            <div class="card profile-section-card mb-4">
+                <div class="card-header profile-section-header">
+                    <div class="section-icon icon-red">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 fw-bold mb-1">Medical Information</h2>
+                        <p class="text-muted small mb-0">Recorded medical history</p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="medical-info-block">
+                        <div class="medical-info-title text-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Allergies
+                        </div>
+                        <p class="mb-0">{{ patient.allergies or 'No allergies recorded' }}</p>
+                    </div>
+
+                    <div class="medical-info-block">
+                        <div class="medical-info-title">
+                            <i class="bi bi-journal-medical me-2"></i>Medical History
+                        </div>
+                        <p class="mb-0">{{ patient.medical_history or 'No medical history recorded' }}</p>
+                    </div>
+
+                    <div class="medical-info-block">
+                        <div class="medical-info-title">
+                            <i class="bi bi-activity me-2"></i>Chronic Conditions
+                        </div>
+                        <p class="mb-0">{{ patient.chronic_conditions or 'No chronic conditions recorded' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insurance -->
+            <div class="card profile-section-card mb-4">
+                <div class="card-header profile-section-header">
+                    <div class="section-icon icon-green">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 fw-bold mb-1">Insurance Details</h2>
+                        <p class="text-muted small mb-0">Patient insurance information</p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-building"></i></div>
+                        <div>
+                            <div class="profile-info-label">Insurance Provider</div>
+                            <div class="profile-info-value">{{ patient.insurance_provider or '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <div class="profile-info-icon"><i class="bi bi-card-text"></i></div>
+                        <div>
+                            <div class="profile-info-label">Policy Number</div>
+                            <div class="profile-info-value">{{ patient.insurance_policy_number or '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: History Tabs -->
+        <div class="col-12 col-xl-8">
+            <div class="card profile-history-card">
+
+                <div class="card-header bg-white border-bottom p-3">
+                    <h2 class="h5 fw-bold mb-1">Patient History</h2>
+                    <p class="text-muted small mb-0">
+                        Appointments, clinical records, admissions and bills
+                    </p>
+                </div>
+
+                <div class="profile-tabs-wrap">
+                    <ul class="nav nav-tabs profile-tabs" id="patientHistoryTabs" role="tablist">
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="appointments-tab"
+                                    data-bs-toggle="tab" data-bs-target="#appts"
+                                    type="button" role="tab" aria-controls="appts"
+                                    aria-selected="true">
+                                <i class="bi bi-calendar-check me-1"></i>Appointments
+                                <span class="history-count">{{ appointments|length }}</span>
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="records-tab"
+                                    data-bs-toggle="tab" data-bs-target="#records"
+                                    type="button" role="tab" aria-controls="records"
+                                    aria-selected="false">
+                                <i class="bi bi-journal-medical me-1"></i>Records
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="admissions-tab"
+                                    data-bs-toggle="tab" data-bs-target="#admissions"
+                                    type="button" role="tab" aria-controls="admissions"
+                                    aria-selected="false">
+                                <i class="bi bi-hospital me-1"></i>Admissions
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="bills-tab"
+                                    data-bs-toggle="tab" data-bs-target="#bills"
+                                    type="button" role="tab" aria-controls="bills"
+                                    aria-selected="false">
+                                <i class="bi bi-receipt me-1"></i>Bills
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="tab-content">
+
+                        <!-- Appointments -->
+                        <div class="tab-pane fade show active" id="appts"
+                             role="tabpanel" aria-labelledby="appointments-tab" tabindex="0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 profile-history-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Doctor</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for a in appointments %}
+                                        <tr>
+                                            <td>{{ a.appointment_date or '-' }}</td>
+                                            <td>{{ a.appointment_time or '-' }}</td>
+                                            <td>
+                                                {{ a.doctor.user.full_name if a.doctor and a.doctor.user else '-' }}
+                                            </td>
+                                            <td>
+                                                <span class="profile-status-badge">
+                                                    {{ (a.status or 'unknown')|replace('_', ' ')|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="profile-empty-state">
+                                                    <i class="bi bi-calendar-x"></i>
+                                                    <p class="mb-0">No appointments recorded.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Medical Records -->
+                        <div class="tab-pane fade" id="records"
+                             role="tabpanel" aria-labelledby="records-tab" tabindex="0">
+                            <div class="p-3">
+                                {% for r in records %}
+                                <div class="history-item">
+                                    <div class="history-item-icon">
+                                        <i class="bi bi-file-medical"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">
+                                            {{ r.diagnosis or r.chief_complaint or 'Medical Visit' }}
+                                        </div>
+                                        <div class="text-muted small mt-1">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            {{ r.visit_date.strftime('%d %b %Y') if r.visit_date else 'Date unavailable' }}
+                                        </div>
+                                        <div class="text-muted small mt-1">
+                                            Dr. {{ r.doctor.user.full_name if r.doctor and r.doctor.user else 'Not specified' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="profile-empty-state">
+                                    <i class="bi bi-file-earmark-medical"></i>
+                                    <p class="mb-0">No medical records found.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Admissions -->
+                        <div class="tab-pane fade" id="admissions"
+                             role="tabpanel" aria-labelledby="admissions-tab" tabindex="0">
+                            <div class="p-3">
+                                {% for a in admissions %}
+                                <div class="history-item">
+                                    <div class="history-item-icon admission-icon">
+                                        <i class="bi bi-hospital"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">
+                                            Admission
+                                            {% if a.bed %} · Bed {{ a.bed.bed_number }}{% endif %}
+                                        </div>
+                                        <div class="text-muted small mt-1">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            {{ a.admission_date.strftime('%d %b %Y') if a.admission_date else 'Date unavailable' }}
+                                        </div>
+                                    </div>
+                                    <span class="profile-status-badge">
+                                        {{ (a.status or 'unknown')|replace('_', ' ')|title }}
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div class="profile-empty-state">
+                                    <i class="bi bi-hospital"></i>
+                                    <p class="mb-0">No admissions recorded.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Bills -->
+                        <div class="tab-pane fade" id="bills"
+                             role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                            <div class="p-3">
+                                {% for b in bills %}
+                                <div class="history-item">
+                                    <div class="history-item-icon bill-icon">
+                                        <i class="bi bi-receipt"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">
+                                            {{ b.bill_number or 'Bill' }}
+                                        </div>
+                                        <div class="text-muted small mt-1">
+                                            {{ b.bill_date.strftime('%d %b %Y') if b.bill_date else 'Date unavailable' }}
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-nowrap">
+                                            ₹{{ '%.2f'|format(b.total_amount or 0) }}
+                                        </div>
+                                        <span class="profile-status-badge">
+                                            {{ (b.payment_status or 'unknown')|replace('_', ' ')|title }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="profile-empty-state">
+                                    <i class="bi bi-receipt"></i>
+                                    <p class="mb-0">No bills recorded.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-privacy-note mt-3">
+                <i class="bi bi-shield-lock-fill me-2"></i>
+                Patient information is confidential. Access and share records only as authorized.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.patient-profile-page {
+    color: #1e293b;
+}
+
+.profile-header-card {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, .04);
+}
+
+.profile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 70px;
+    width: 70px;
+    height: 70px;
+    border-radius: 18px;
+    background: #e8f1ff;
+    color: #245ca6;
+    font-size: 2rem;
+}
+
+.profile-active-badge {
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #e9f8ef;
+    color: #167343;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    color: #64748b;
+    font-size: .84rem;
+}
+
+.profile-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 96px;
+    padding: 17px;
+    background: #fff;
+    border: 1px solid #e8edf3;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, .035);
+}
+
+.profile-stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+}
+
+.stat-blue { background: #e8f1ff; color: #2865b5; }
+.stat-red { background: #fff0f0; color: #c53e4d; }
+.stat-green { background: #e9f8ef; color: #16804a; }
+.stat-purple { background: #f1eaff; color: #7650bb; }
+
+.profile-stat-label {
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: .76rem;
+}
+
+.profile-stat-value {
+    overflow-wrap: anywhere;
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+.profile-section-card,
+.profile-history-card {
+    overflow: hidden;
+    border: 1px solid #e8edf3;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .035);
+}
+
+.profile-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 1.1rem;
+}
+
+.icon-blue { background: #e8f1ff; color: #2865b5; }
+.icon-orange { background: #fff1e6; color: #bd641b; }
+.icon-red { background: #fff0f0; color: #c53e4d; }
+.icon-green { background: #e9f8ef; color: #16804a; }
+
+.profile-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f2f6;
+}
+
+.profile-info-item:first-child {
+    padding-top: 0;
+}
+
+.profile-info-item:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.profile-info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: #f3f6fa;
+    color: #64748b;
+}
+
+.profile-info-label {
+    margin-bottom: 3px;
+    color: #64748b;
+    font-size: .76rem;
+}
+
+.profile-info-value {
+    font-size: .88rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.medical-info-block {
+    padding: 13px 0;
+    border-bottom: 1px solid #f0f2f6;
+    font-size: .87rem;
+    overflow-wrap: anywhere;
+}
+
+.medical-info-block:first-child {
+    padding-top: 0;
+}
+
+.medical-info-block:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.medical-info-title {
+    margin-bottom: 7px;
+    font-weight: 700;
+}
+
+.profile-tabs-wrap {
+    overflow-x: auto;
+    background: #fff;
+}
+
+.profile-tabs {
+    flex-wrap: nowrap;
+    min-width: max-content;
+    padding: 0 12px;
+    border-bottom: 1px solid #e8edf3;
+}
+
+.profile-tabs .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 14px 12px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    color: #64748b;
+    font-size: .83rem;
+    font-weight: 600;
+}
+
+.profile-tabs .nav-link.active {
+    background: #fff;
+    border-bottom-color: #1769aa;
+    color: #1769aa;
+}
+
+.history-count {
+    margin-left: 3px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: #eef2f7;
+    color: #475569;
+    font-size: .7rem;
+}
+
+.profile-history-table thead th {
+    padding: 14px;
+    background: #f7f9fc;
+    color: #64748b;
+    font-size: .73rem;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+    white-space: nowrap;
+}
+
+.profile-history-table tbody td {
+    padding: 14px;
+    font-size: .85rem;
+}
+
+.profile-status-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: #edf2f7;
+    color: #475569;
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 15px 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.history-item:first-child {
+    padding-top: 0;
+}
+
+.history-item:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.history-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #e8f1ff;
+    color: #2865b5;
+    font-size: 1.15rem;
+}
+
+.admission-icon {
+    background: #e9f8ef;
+    color: #16804a;
+}
+
+.bill-icon {
+    background: #fff1e6;
+    color: #bd641b;
+}
+
+.profile-empty-state {
+    padding: 40px 16px;
+    text-align: center;
+    color: #64748b;
+    font-size: .88rem;
+}
+
+.profile-empty-state > i {
+    display: block;
+    margin-bottom: 12px;
+    color: #a3afbf;
+    font-size: 2rem;
+}
+
+.profile-privacy-note {
+    padding: 13px 15px;
+    border: 1px solid #dce8f7;
+    border-radius: 10px;
+    background: #f4f8ff;
+    color: #496585;
+    font-size: .8rem;
+}
+
+@media (max-width: 767.98px) {
+    .profile-header-card {
+        padding: 17px;
+    }
+
+    .profile-avatar {
+        flex-basis: 54px;
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        font-size: 1.6rem;
+    }
+
+    .profile-header-card .h3 {
+        font-size: 1.25rem;
+    }
+
+    .profile-header-card .btn {
+        font-size: .8rem;
+    }
+
+    .profile-stat-card {
+        gap: 9px;
+        padding: 12px;
+    }
+
+    .profile-stat-icon {
+        flex-basis: 36px;
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .profile-stat-value {
+        font-size: .8rem;
+    }
+
+    .history-item {
+        align-items: flex-start;
+    }
+}
+</style>
+{% endblock %}

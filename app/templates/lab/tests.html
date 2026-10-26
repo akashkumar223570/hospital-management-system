@@ -1,0 +1,177 @@
+
+{% extends "base.html" %}
+
+{% block title %}Lab Test Catalog{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary px-3 py-2 mb-2">
+                <i class="bi bi-clipboard2-pulse me-1"></i>
+                Laboratory
+            </span>
+            <h2 class="fw-bold mb-1">Lab Test Catalog</h2>
+            <p class="text-muted mb-0">
+                View laboratory tests, sample types, pricing, and turnaround times.
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 border rounded-3 bg-white px-3 py-2 shadow-sm">
+            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2">
+                <i class="bi bi-list-check fs-5"></i>
+            </div>
+            <div>
+                <div class="small text-muted">Total Tests</div>
+                <div class="fw-bold fs-5">{{ tests|length }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalog Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom p-3 p-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Available Laboratory Tests</h5>
+                    <p class="text-muted small mb-0">
+                        Catalog details and test charges
+                    </p>
+                </div>
+
+                <div class="input-group" style="max-width: 320px;">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="search"
+                        id="testSearch"
+                        class="form-control bg-light border-start-0"
+                        placeholder="Search tests..."
+                        aria-label="Search laboratory tests">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="testTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 py-3">Code</th>
+                        <th class="py-3">Test Name</th>
+                        <th class="py-3">Category</th>
+                        <th class="py-3">Sample Type</th>
+                        <th class="py-3 text-end">Price</th>
+                        <th class="py-3 text-center">TAT (Hours)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for t in tests %}
+                    <tr>
+                        <td class="px-3">
+                            <span class="badge bg-light text-dark border font-monospace">
+                                {{ t.code }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2">
+                                    <i class="bi bi-droplet-half"></i>
+                                </div>
+                                <span class="fw-semibold">{{ t.name }}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if t.category %}
+                            <span class="badge rounded-pill text-bg-info">
+                                {{ t.category }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="text-secondary">
+                                <i class="bi bi-eyedropper me-1"></i>
+                                {{ t.sample_type or 'Not specified' }}
+                            </span>
+                        </td>
+
+                        <td class="text-end fw-bold text-success text-nowrap">
+                            ₹{{ "%.2f"|format(t.price or 0) }}
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ t.turnaround_hours }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted mb-3">
+                                <i class="bi bi-clipboard-x display-5"></i>
+                            </div>
+                            <h6 class="fw-bold">No Laboratory Tests Found</h6>
+                            <p class="text-muted small mb-0">
+                                No tests are currently available in the catalog.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white border-top px-3 py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="text-muted small" id="testCount">
+                    Showing {{ tests|length }} test(s)
+                </span>
+                <span class="text-muted small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    City Care Hospital
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client-side Search -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("testSearch");
+    const table = document.getElementById("testTable");
+    const countLabel = document.getElementById("testCount");
+
+    if (!searchInput || !table || !countLabel) return;
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        const rows = table.querySelectorAll("tbody tr");
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            // Ignore the empty-catalog message row.
+            if (row.querySelector("td[colspan]")) return;
+
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleCount++;
+        });
+
+        countLabel.textContent =
+            "Showing " + visibleCount + " test(s)";
+    });
+});
+</script>
+{% endblock %}

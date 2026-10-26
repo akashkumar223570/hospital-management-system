@@ -1,0 +1,472 @@
+
+{% extends "base.html" %}
+
+{% block title %}Edit Patient | City Care Hospital{% endblock %}
+
+{% block content %}
+<div class="patient-edit-page">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="edit-heading-icon">
+                    <i class="bi bi-person-gear"></i>
+                </span>
+                <h1 class="h3 fw-bold mb-0">Edit Patient</h1>
+            </div>
+            <p class="text-muted mb-0">
+                Update the personal, medical and contact information for
+                <strong>{{ patient.full_name }}</strong>.
+            </p>
+        </div>
+
+        <a href="{{ url_for('patients.view', id=patient.id) }}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Profile
+        </a>
+    </div>
+
+    <!-- Patient Identity -->
+    <div class="edit-patient-banner mb-4">
+        <div class="edit-patient-avatar">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="fw-bold fs-5">{{ patient.full_name }}</div>
+            <div class="edit-patient-meta">
+                <span><i class="bi bi-person-vcard me-1"></i>UHID: {{ patient.uhid or '-' }}</span>
+                <span><i class="bi bi-droplet-fill me-1"></i>{{ patient.blood_group or 'Blood group not recorded' }}</span>
+            </div>
+        </div>
+        <span class="edit-record-badge">
+            <i class="bi bi-pencil-square me-1"></i>Editing Record
+        </span>
+    </div>
+
+    <form method="POST" id="editPatientForm">
+
+        <!-- Personal Information -->
+        <div class="card edit-section-card mb-4">
+            <div class="card-header edit-section-header">
+                <div class="edit-section-icon icon-blue">
+                    <i class="bi bi-person-vcard-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Personal Information</h2>
+                    <p class="text-muted small mb-0">Basic identity and demographic details</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" id="first_name" name="first_name"
+                               class="form-control"
+                               value="{{ patient.first_name or '' }}"
+                               autocomplete="given-name" required>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" id="last_name" name="last_name"
+                               class="form-control"
+                               value="{{ patient.last_name or '' }}"
+                               autocomplete="family-name" required>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label for="date_of_birth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                        <input type="date" id="date_of_birth" name="date_of_birth"
+                               class="form-control"
+                               value="{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else '' }}"
+                               required>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                        <select id="gender" name="gender" class="form-select" required>
+                            <option value="">Select gender</option>
+                            <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+                            <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label for="blood_group" class="form-label">Blood Group</label>
+                        <select id="blood_group" name="blood_group" class="form-select">
+                            <option value="">Select blood group</option>
+                            {% for group in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                            <option value="{{ group }}" {% if patient.blood_group == group %}selected{% endif %}>
+                                {{ group }}
+                            </option>
+                            {% endfor %}
+                            {% if patient.blood_group and patient.blood_group not in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                            <option value="{{ patient.blood_group }}" selected>{{ patient.blood_group }}</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card edit-section-card mb-4">
+            <div class="card-header edit-section-header">
+                <div class="edit-section-icon icon-green">
+                    <i class="bi bi-telephone-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Contact Information</h2>
+                    <p class="text-muted small mb-0">Phone, email and residential address</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6">
+                        <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" id="phone" name="phone" class="form-control"
+                               value="{{ patient.phone or '' }}"
+                               autocomplete="tel" required>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control"
+                               value="{{ patient.email or '' }}"
+                               autocomplete="email">
+                    </div>
+
+                    <div class="col-12">
+                        <label for="address" class="form-label">Street Address</label>
+                        <textarea id="address" name="address" class="form-control"
+                                  rows="3" autocomplete="street-address">{{ patient.address or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" id="city" name="city" class="form-control"
+                               value="{{ patient.city or '' }}" autocomplete="address-level2">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="state" class="form-label">State</label>
+                        <input type="text" id="state" name="state" class="form-control"
+                               value="{{ patient.state or '' }}" autocomplete="address-level1">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="pincode" class="form-label">PIN Code</label>
+                        <input type="text" id="pincode" name="pincode" class="form-control"
+                               value="{{ patient.pincode or '' }}"
+                               inputmode="numeric" maxlength="10" autocomplete="postal-code">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="card edit-section-card mb-4">
+            <div class="card-header edit-section-header">
+                <div class="edit-section-icon icon-orange">
+                    <i class="bi bi-telephone-forward-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Emergency Contact</h2>
+                    <p class="text-muted small mb-0">Person to contact in an emergency</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-4">
+                        <label for="emergency_contact_name" class="form-label">Contact Person</label>
+                        <input type="text" id="emergency_contact_name"
+                               name="emergency_contact_name" class="form-control"
+                               value="{{ patient.emergency_contact_name or '' }}">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="emergency_contact_phone" class="form-label">Emergency Phone</label>
+                        <input type="tel" id="emergency_contact_phone"
+                               name="emergency_contact_phone" class="form-control"
+                               value="{{ patient.emergency_contact_phone or '' }}">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="emergency_contact_relation" class="form-label">Relationship</label>
+                        <input type="text" id="emergency_contact_relation"
+                               name="emergency_contact_relation" class="form-control"
+                               value="{{ patient.emergency_contact_relation or '' }}"
+                               placeholder="e.g. Parent, Spouse">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Information -->
+        <div class="card edit-section-card mb-4">
+            <div class="card-header edit-section-header">
+                <div class="edit-section-icon icon-red">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Medical Information</h2>
+                    <p class="text-muted small mb-0">Existing allergies, history and chronic conditions</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12">
+                        <label for="allergies" class="form-label">Known Allergies</label>
+                        <textarea id="allergies" name="allergies" class="form-control"
+                                  rows="2" placeholder="Record known allergies, if any">{{ patient.allergies or '' }}</textarea>
+                        <div class="form-text">Record clinically verified information where available.</div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="medical_history" class="form-label">Medical History</label>
+                        <textarea id="medical_history" name="medical_history"
+                                  class="form-control" rows="4"
+                                  placeholder="Relevant previous medical history">{{ patient.medical_history or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="chronic_conditions" class="form-label">Chronic Conditions</label>
+                        <textarea id="chronic_conditions" name="chronic_conditions"
+                                  class="form-control" rows="4"
+                                  placeholder="Recorded chronic conditions">{{ patient.chronic_conditions or '' }}</textarea>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Insurance Information -->
+        <div class="card edit-section-card mb-4">
+            <div class="card-header edit-section-header">
+                <div class="edit-section-icon icon-purple">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Insurance Information</h2>
+                    <p class="text-muted small mb-0">Insurance provider and policy details</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6">
+                        <label for="insurance_provider" class="form-label">Insurance Provider</label>
+                        <input type="text" id="insurance_provider" name="insurance_provider"
+                               class="form-control"
+                               value="{{ patient.insurance_provider or '' }}">
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label for="insurance_policy_number" class="form-label">Policy Number</label>
+                        <input type="text" id="insurance_policy_number"
+                               name="insurance_policy_number" class="form-control"
+                               value="{{ patient.insurance_policy_number or '' }}">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="edit-form-actions">
+            <div class="small text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Review the changes before saving.
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('patients.view', id=patient.id) }}"
+                   class="btn btn-outline-secondary px-4">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-4" id="savePatientBtn">
+                    <i class="bi bi-check2-circle me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<style>
+.patient-edit-page {
+    color: #1e293b;
+}
+
+.edit-heading-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #e8f1ff;
+    color: #2865b5;
+    font-size: 1.35rem;
+}
+
+.edit-patient-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    border: 1px solid #e4ebf3;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, .035);
+}
+
+.edit-patient-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #edf4ff;
+    color: #3569ae;
+    font-size: 1.6rem;
+}
+
+.edit-patient-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 5px;
+    color: #64748b;
+    font-size: .82rem;
+}
+
+.edit-record-badge {
+    padding: 7px 11px;
+    border-radius: 8px;
+    background: #fff6e8;
+    color: #9a5a0a;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.edit-section-card {
+    overflow: hidden;
+    border: 1px solid #e6ebf2;
+    border-radius: 14px;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, .035);
+}
+
+.edit-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.edit-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 1.15rem;
+}
+
+.icon-blue { background: #e8f1ff; color: #2865b5; }
+.icon-green { background: #e9f8ef; color: #16804a; }
+.icon-orange { background: #fff1e6; color: #bd641b; }
+.icon-red { background: #fff0f0; color: #c53e4d; }
+.icon-purple { background: #f1eaff; color: #7650bb; }
+
+.patient-edit-page .form-label {
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.patient-edit-page .form-control,
+.patient-edit-page .form-select {
+    min-height: 43px;
+    border-color: #dce3ec;
+    border-radius: 9px;
+    font-size: .9rem;
+}
+
+.patient-edit-page textarea.form-control {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.patient-edit-page .form-control:focus,
+.patient-edit-page .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .1);
+}
+
+.edit-form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 1px solid #e6ebf2;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, .045);
+    backdrop-filter: blur(8px);
+}
+
+@media (max-width: 575.98px) {
+    .edit-patient-banner {
+        padding: 15px;
+    }
+
+    .edit-section-header {
+        padding: 14px;
+    }
+
+    .patient-edit-page .card-body {
+        padding: 16px !important;
+    }
+
+    .edit-form-actions {
+        align-items: stretch;
+        padding: 13px;
+    }
+
+    .edit-form-actions > div:last-child {
+        width: 100%;
+    }
+
+    .edit-form-actions .btn {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}

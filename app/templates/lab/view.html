@@ -1,0 +1,244 @@
+
+{% extends "base.html" %}
+
+{% block title %}Lab Order Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-primary fs-3">⚕</span>
+                <h1 class="h3 fw-bold mb-0">{{ order.order_number }}</h1>
+            </div>
+            <p class="text-muted mb-0">
+                {{ order.patient.full_name if order.patient else 'Patient unavailable' }}
+                <span class="mx-1">·</span>
+                Laboratory Order Details
+            </p>
+        </div>
+
+        <a href="{{ url_for('lab.list_orders') }}"
+           class="btn btn-outline-secondary">
+            ← Back to Lab Orders
+        </a>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="small text-muted mb-2">PATIENT</div>
+                    <h5 class="fw-bold mb-1">
+                        {{ order.patient.full_name if order.patient else 'Patient unavailable' }}
+                    </h5>
+                    <small class="text-muted">Order: {{ order.order_number }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="small text-muted mb-2">ORDER STATUS</div>
+                    <div class="mb-2">
+                        {% if order.status == 'Completed' %}
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                {{ order.status }}
+                            </span>
+                        {% elif order.status in ['Cancelled', 'Rejected'] %}
+                            <span class="badge rounded-pill text-bg-danger px-3 py-2">
+                                {{ order.status }}
+                            </span>
+                        {% elif order.status in ['Sample Collected', 'In Progress'] %}
+                            <span class="badge rounded-pill text-bg-primary px-3 py-2">
+                                {{ order.status }}
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill text-bg-secondary px-3 py-2">
+                                {{ order.status or 'Unknown' }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Current processing stage</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="small text-muted mb-2">ORDER PRIORITY</div>
+                    <div class="mb-2">
+                        {% if order.priority == 'STAT' %}
+                            <span class="badge rounded-pill text-bg-danger px-3 py-2">STAT</span>
+                        {% elif order.priority == 'Urgent' %}
+                            <span class="badge rounded-pill text-bg-warning px-3 py-2">Urgent</span>
+                        {% elif order.priority == 'Routine' %}
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">Routine</span>
+                        {% else %}
+                            <span class="badge rounded-pill text-bg-secondary px-3 py-2">
+                                {{ order.priority or 'Not specified' }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Assigned order priority</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Results -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="fw-bold mb-1">Laboratory Tests &amp; Results</h5>
+            <small class="text-muted">
+                Review each test's processing status, result and reference range.
+            </small>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 py-3">Laboratory Test</th>
+                        <th class="py-3">Test Status</th>
+                        <th class="py-3">Result</th>
+                        <th class="py-3">Reference Range</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for i in order.items %}
+                    <tr>
+                        <td class="px-3">
+                            <div class="fw-semibold">
+                                {{ i.lab_test.name if i.lab_test else 'Test unavailable' }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if i.status == 'Completed' %}
+                                <span class="badge text-bg-success">{{ i.status }}</span>
+                            {% elif i.status in ['In Progress', 'Processing'] %}
+                                <span class="badge text-bg-primary">{{ i.status }}</span>
+                            {% elif i.status in ['Cancelled', 'Rejected'] %}
+                                <span class="badge text-bg-danger">{{ i.status }}</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">
+                                    {{ i.status or 'Pending' }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if i.is_abnormal %}
+                                <span class="text-danger fw-bold">
+                                    {{ i.result_value if i.result_value is not none and i.result_value != '' else '—' }}
+                                    <span class="small">Abnormal</span>
+                                </span>
+                            {% else %}
+                                <span class="fw-semibold">
+                                    {{ i.result_value if i.result_value is not none and i.result_value != '' else '—' }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ i.reference_range or '—' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <h6 class="fw-bold">No tests found</h6>
+                            <p class="text-muted mb-0">
+                                No laboratory test items are associated with this order.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white border-top py-3">
+            <small class="text-muted">
+                Tests in this order: {{ order.items.count() }}
+            </small>
+        </div>
+    </div>
+
+    <!-- Workflow Actions -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="fw-bold mb-1">Order Workflow</h5>
+            <small class="text-muted">
+                Available actions depend on the current order status.
+            </small>
+        </div>
+
+        <div class="card-body p-4">
+            {% if order.status == 'Ordered' %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <div class="fw-semibold">Sample collection</div>
+                        <small class="text-muted">
+                            Mark the sample as collected when collection has been confirmed.
+                        </small>
+                    </div>
+
+                    <form method="POST"
+                          action="{{ url_for('lab.collect_sample', id=order.id) }}">
+                        <button type="submit" class="btn btn-warning">
+                            Mark Sample Collected
+                        </button>
+                    </form>
+                </div>
+
+            {% elif order.status in ['Sample Collected', 'In Progress'] %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <div class="fw-semibold">Enter laboratory results</div>
+                        <small class="text-muted">
+                            Open the result-entry page for this order.
+                        </small>
+                    </div>
+
+                    <a href="{{ url_for('lab.enter_result', id=order.id) }}"
+                       class="btn btn-primary">
+                        Enter Results →
+                    </a>
+                </div>
+
+            {% elif order.status == 'Completed' %}
+                <div class="d-flex align-items-start gap-3">
+                    <span class="text-success fs-4">✓</span>
+                    <div>
+                        <div class="fw-semibold">Order completed</div>
+                        <p class="text-muted mb-0">
+                            This order is marked as completed. Review the results above.
+                        </p>
+                    </div>
+                </div>
+
+            {% else %}
+                <p class="text-muted mb-0">
+                    No workflow action is available for the current status:
+                    <strong>{{ order.status or 'Unknown' }}</strong>.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ url_for('lab.list_orders') }}" class="btn btn-outline-secondary px-4">
+            Back to Lab Orders
+        </a>
+    </div>
+
+</div>
+{% endblock %}

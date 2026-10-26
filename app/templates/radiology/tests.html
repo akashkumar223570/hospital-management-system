@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Radiology Tests{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Radiology Catalog</h1></div>
+<div class="card"><table class="table mb-0"><thead><tr><th>Name</th><th>Modality</th><th>Body Part</th><th>Price</th><th>Duration</th></tr></thead>
+<tbody>{% for t in tests %}
+<tr><td>{{ t.name }}</td><td>{{ t.modality }}</td><td>{{ t.body_part }}</td><td>₹{{ t.price }}</td><td>{{ t.duration_minutes }} min</td></tr>
+{% endfor %}</tbody></table></div>
+{% endblock %}

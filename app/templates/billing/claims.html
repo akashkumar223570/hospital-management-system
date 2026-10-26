@@ -1,0 +1,184 @@
+
+{% extends "base.html" %}
+
+{% block title %}Insurance Claims{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary px-3 py-2 mb-2">
+                <i class="bi bi-shield-check me-1"></i>
+                Billing Department
+            </span>
+            <h2 class="fw-bold mb-1">Insurance Claims</h2>
+            <p class="text-muted mb-0">
+                Review patient insurance claims, providers, amounts, and claim statuses.
+            </p>
+        </div>
+
+        <div class="border rounded-4 bg-white shadow-sm px-4 py-3">
+            <div class="small text-muted">Claims in Current Results</div>
+            <div class="fs-3 fw-bold">{{ claims|length }}</div>
+        </div>
+    </div>
+
+    <!-- Claims Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom p-3 p-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Claims Register</h5>
+                    <p class="text-muted small mb-0">
+                        Insurance claim records maintained by the hospital.
+                    </p>
+                </div>
+
+                <div class="input-group" style="max-width: 320px;">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="search"
+                        id="claimSearch"
+                        class="form-control bg-light border-start-0"
+                        placeholder="Search claims..."
+                        aria-label="Search insurance claims">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="claimsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 px-md-4 py-3">Claim Number</th>
+                        <th class="py-3">Patient</th>
+                        <th class="py-3">Insurance Provider</th>
+                        <th class="py-3 text-end">Claim Amount</th>
+                        <th class="py-3">Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for c in claims %}
+                    <tr>
+                        <td class="px-3 px-md-4">
+                            <span class="badge bg-light text-dark border font-monospace px-3 py-2">
+                                {{ c.claim_number }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary
+                                            d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 42px; height: 42px;">
+                                    <i class="bi bi-person-vcard fs-5"></i>
+                                </div>
+                                <span class="fw-semibold">
+                                    {{ c.patient.full_name if c.patient else 'Patient not specified' }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-building text-muted"></i>
+                                <span>{{ c.insurance_provider or 'Not specified' }}</span>
+                            </div>
+                        </td>
+
+                        <td class="text-end fw-bold text-nowrap">
+                            ₹{{ '%.2f'|format(c.claim_amount or 0) }}
+                        </td>
+
+                        <td>
+                            {% set claim_status = (c.status or 'Unknown')|lower %}
+
+                            {% if claim_status in ['approved', 'paid', 'settled'] %}
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ c.status }}
+                            </span>
+                            {% elif claim_status in ['rejected', 'denied'] %}
+                            <span class="badge rounded-pill text-bg-danger px-3 py-2">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {{ c.status }}
+                            </span>
+                            {% elif claim_status in ['pending', 'submitted', 'processing', 'under review'] %}
+                            <span class="badge rounded-pill text-bg-warning px-3 py-2">
+                                <i class="bi bi-hourglass-split me-1"></i>
+                                {{ c.status }}
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                                {{ c.status or 'Unknown' }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center
+                                        justify-content-center mb-3"
+                                 style="width: 76px; height: 76px;">
+                                <i class="bi bi-file-earmark-medical text-secondary fs-2"></i>
+                            </div>
+                            <h6 class="fw-bold">No Insurance Claims Found</h6>
+                            <p class="text-muted small mb-0">
+                                There are currently no claims to display.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white border-top px-3 px-md-4 py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="text-muted small" id="claimCount">
+                    Showing {{ claims|length }} claim(s)
+                </span>
+                <span class="text-muted small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    City Care Hospital
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client-Side Search -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("claimSearch");
+    const table = document.getElementById("claimsTable");
+    const countLabel = document.getElementById("claimCount");
+
+    if (!searchInput || !table || !countLabel) return;
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        const rows = table.querySelectorAll("tbody tr");
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            if (row.querySelector("td[colspan]")) return;
+
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleCount++;
+        });
+
+        countLabel.textContent = "Showing " + visibleCount + " claim(s)";
+    });
+});
+</script>
+{% endblock %}

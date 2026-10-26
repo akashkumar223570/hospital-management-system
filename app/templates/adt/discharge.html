@@ -1,0 +1,121 @@
+
+{% extends "base.html" %}
+
+{% block title %}Discharge Patient{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-success fs-3">✓</span>
+                <h1 class="h3 fw-bold mb-0">Discharge Patient</h1>
+            </div>
+            <p class="text-muted mb-0">
+                Prepare the discharge summary and document follow-up instructions.
+            </p>
+        </div>
+
+        <a href="{{ url_for('adt.list_admissions') }}"
+           class="btn btn-outline-secondary">
+            ← Back to Admissions
+        </a>
+    </div>
+
+    <!-- Admission Summary -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+            <h5 class="fw-bold mb-1">Admission Information</h5>
+            <small class="text-muted">Confirm the patient details before completing discharge.</small>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="small text-muted mb-1">Patient Name</div>
+                    <div class="fw-bold fs-5">
+                        {{ admission.patient.full_name if admission.patient else 'Patient unavailable' }}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="small text-muted mb-1">Assigned Bed</div>
+                    <div class="fw-semibold">
+                        {{ admission.bed.bed_number if admission.bed else 'Not assigned' }}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="small text-muted mb-1">Admission Reference</div>
+                    <div class="fw-semibold">#{{ admission.id }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discharge Form -->
+    <form method="POST">
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="fw-bold mb-1">Discharge Documentation</h5>
+                <small class="text-muted">
+                    Complete the required summary and any relevant patient instructions.
+                </small>
+            </div>
+
+            <div class="card-body p-4">
+
+                <div class="mb-4">
+                    <label for="discharge_summary" class="form-label fw-semibold">
+                        Discharge Summary <span class="text-danger">*</span>
+                    </label>
+
+                    <textarea name="discharge_summary"
+                              id="discharge_summary"
+                              class="form-control"
+                              rows="6"
+                              required
+                              placeholder="Enter the clinician-approved discharge summary, treatment provided and relevant clinical outcome..."></textarea>
+
+                    <div class="form-text">
+                        Ensure the summary is accurate and reviewed according to hospital procedures.
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label for="discharge_instructions" class="form-label fw-semibold">
+                        Discharge Instructions
+                    </label>
+
+                    <textarea name="discharge_instructions"
+                              id="discharge_instructions"
+                              class="form-control"
+                              rows="5"
+                              placeholder="Enter prescribed medication instructions, follow-up arrangements, care guidance and warning signs, as applicable..."></textarea>
+
+                    <div class="form-text">
+                        Include only instructions confirmed by the treating clinical team.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+            <a href="{{ url_for('adt.list_admissions') }}"
+               class="btn btn-light border px-4">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-success px-4">
+                Confirm Discharge
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

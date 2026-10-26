@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Portal — {{ patient.full_name }}{% endblock %}
+{% block content %}
+<div class="page-header"><h1>{{ patient.full_name }}</h1><p class="text-muted">{{ patient.uhid }}</p></div>
+<div class="row g-3">
+<div class="col-md-4"><div class="card"><div class="card-header">Appointments</div><ul class="list-group list-group-flush">
+{% for a in appointments %}<li class="list-group-item">{{ a.appointment_date }} {{ a.appointment_time }} — {{ a.status }}</li>
+{% else %}<li class="list-group-item text-muted">None</li>{% endfor %}</ul></div></div>
+<div class="col-md-4"><div class="card"><div class="card-header">Records</div><ul class="list-group list-group-flush">
+{% for r in records %}<li class="list-group-item">{{ r.visit_date.strftime('%d %b %Y') if r.visit_date else '' }} — {{ r.diagnosis or 'Visit' }}</li>
+{% else %}<li class="list-group-item text-muted">None</li>{% endfor %}</ul></div></div>
+<div class="col-md-4"><div class="card"><div class="card-header">Bills</div><ul class="list-group list-group-flush">
+{% for b in bills %}<li class="list-group-item d-flex justify-content-between"><span>{{ b.bill_number }}</span><span>₹{{ '%.2f'|format(b.total_amount) }}</span></li>
+{% else %}<li class="list-group-item text-muted">None</li>{% endfor %}</ul></div></div>
+</div>
+{% endblock %}

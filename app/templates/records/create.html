@@ -1,0 +1,302 @@
+
+{% extends "base.html" %}
+
+{% block title %}Create Medical Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="text-primary fs-4">✚</span>
+                <h1 class="h3 fw-bold mb-0">Create Medical Record</h1>
+            </div>
+            <p class="text-muted mb-0">Record patient symptoms, examination, diagnosis, vitals and treatment.</p>
+        </div>
+
+        <a href="{{ url_for('records.list_records') }}" class="btn btn-outline-secondary">
+            ← Back to Medical Records
+        </a>
+    </div>
+
+    <form method="POST">
+        <!-- Patient and Doctor -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="mb-1 fw-bold">Patient &amp; Doctor Information</h5>
+                <small class="text-muted">Select the patient and responsible doctor.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="patient_id" class="form-label fw-semibold">
+                            Patient <span class="text-danger">*</span>
+                        </label>
+                        <select name="patient_id" id="patient_id" class="form-select" required>
+                            <option value="">Select Patient</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">
+                                {{ p.full_name }} ({{ p.uhid }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="doctor_id" class="form-label fw-semibold">
+                            Doctor <span class="text-danger">*</span>
+                        </label>
+                        <select name="doctor_id" id="doctor_id" class="form-select" required>
+                            <option value="">Select Doctor</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">
+                                {{ d.user.full_name if d.user else d.id }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Assessment -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="mb-1 fw-bold">Clinical Assessment</h5>
+                <small class="text-muted">Document the patient's complaints and clinical findings.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label for="chief_complaint" class="form-label fw-semibold">Chief Complaint</label>
+                        <textarea name="chief_complaint" id="chief_complaint"
+                                  class="form-control" rows="2"
+                                  placeholder="Describe the main reason for the visit..."></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="symptoms" class="form-label fw-semibold">Symptoms</label>
+                        <textarea name="symptoms" id="symptoms"
+                                  class="form-control" rows="3"
+                                  placeholder="Describe reported symptoms..."></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="examination_findings" class="form-label fw-semibold">Examination Findings</label>
+                        <textarea name="examination_findings" id="examination_findings"
+                                  class="form-control" rows="3"
+                                  placeholder="Enter examination observations..."></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="diagnosis" class="form-label fw-semibold">Diagnosis</label>
+                        <textarea name="diagnosis" id="diagnosis"
+                                  class="form-control" rows="3"
+                                  placeholder="Enter the clinical diagnosis..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vital Signs -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="mb-1 fw-bold">Vital Signs</h5>
+                <small class="text-muted">Enter the patient's recorded measurements, where available.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-sm-6 col-lg">
+                        <label for="blood_pressure" class="form-label fw-semibold">Blood Pressure</label>
+                        <input type="text" name="blood_pressure" id="blood_pressure"
+                               class="form-control" placeholder="120/80">
+                    </div>
+
+                    <div class="col-sm-6 col-lg">
+                        <label for="pulse" class="form-label fw-semibold">Pulse</label>
+                        <div class="input-group">
+                            <input type="number" name="pulse" id="pulse"
+                                   class="form-control" min="0" placeholder="72">
+                            <span class="input-group-text">bpm</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-lg">
+                        <label for="temperature" class="form-label fw-semibold">Temperature</label>
+                        <div class="input-group">
+                            <input type="number" name="temperature" id="temperature"
+                                   class="form-control" step="0.1" min="0" placeholder="36.8">
+                            <span class="input-group-text">°C</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-lg">
+                        <label for="weight" class="form-label fw-semibold">Weight</label>
+                        <div class="input-group">
+                            <input type="number" name="weight" id="weight"
+                                   class="form-control" step="0.1" min="0" placeholder="65">
+                            <span class="input-group-text">kg</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-lg">
+                        <label for="spo2" class="form-label fw-semibold">SpO₂</label>
+                        <div class="input-group">
+                            <input type="number" name="spo2" id="spo2"
+                                   class="form-control" min="0" max="100" placeholder="98">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="small text-muted mt-3 mb-0">
+                    Leave a measurement blank if it has not been recorded.
+                </p>
+            </div>
+        </div>
+
+        <!-- Treatment Plan -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="mb-1 fw-bold">Treatment Plan</h5>
+                <small class="text-muted">Add the planned treatment and follow-up instructions.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <label for="treatment_plan" class="form-label fw-semibold">Treatment Details</label>
+                <textarea name="treatment_plan" id="treatment_plan"
+                          class="form-control" rows="4"
+                          placeholder="Enter treatment, advice and follow-up plan..."></textarea>
+            </div>
+        </div>
+
+        <!-- Prescription -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h5 class="mb-1 fw-bold">Prescription</h5>
+                        <small class="text-muted">Optional — add prescribed medicines below.</small>
+                    </div>
+                    <span class="badge text-bg-light border">Optional</span>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-2 mb-2 d-none d-lg-flex text-muted small fw-semibold">
+                    <div class="col-lg-3">Medicine Name</div>
+                    <div class="col-lg-2">Dosage</div>
+                    <div class="col-lg-2">Frequency</div>
+                    <div class="col-lg-2">Duration</div>
+                    <div class="col-lg-1">Quantity</div>
+                    <div class="col-lg-2">Action</div>
+                </div>
+
+                <div id="med-items">
+                    <div class="row g-2 align-items-start mb-3 medicine-row">
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <label class="form-label small d-lg-none">Medicine Name</label>
+                            <input type="text" name="med_name[]" class="form-control"
+                                   placeholder="Medicine name">
+                        </div>
+
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label small d-lg-none">Dosage</label>
+                            <input type="text" name="med_dosage[]" class="form-control"
+                                   placeholder="e.g. 500 mg">
+                        </div>
+
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label small d-lg-none">Frequency</label>
+                            <input type="text" name="med_freq[]" class="form-control"
+                                   placeholder="e.g. 1-0-1">
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="form-label small d-lg-none">Duration</label>
+                            <input type="text" name="med_duration[]" class="form-control"
+                                   placeholder="e.g. 5 days">
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg-1">
+                            <label class="form-label small d-lg-none">Quantity</label>
+                            <input type="number" name="med_qty[]" class="form-control"
+                                   value="1" min="1" placeholder="Qty">
+                        </div>
+
+                        <div class="col-12 col-md-4 col-lg-2">
+                            <label class="form-label small d-lg-none">Action</label>
+                            <button type="button" class="btn btn-outline-danger w-100 remove-med-item">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="add-med-item" class="btn btn-outline-primary">
+                    + Add Medicine
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+            <a href="{{ url_for('records.list_records') }}" class="btn btn-light border px-4">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+                Save Medical Record
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("med-items");
+    const addButton = document.getElementById("add-med-item");
+
+    function updateRemoveButtons() {
+        const rows = container.querySelectorAll(".medicine-row");
+        rows.forEach(function (row) {
+            const button = row.querySelector(".remove-med-item");
+            button.disabled = rows.length === 1;
+        });
+    }
+
+    addButton.addEventListener("click", function () {
+        const firstRow = container.querySelector(".medicine-row");
+        const newRow = firstRow.cloneNode(true);
+
+        newRow.querySelectorAll("input").forEach(function (input) {
+            if (input.name === "med_qty[]") {
+                input.value = "1";
+            } else {
+                input.value = "";
+            }
+        });
+
+        container.appendChild(newRow);
+        updateRemoveButtons();
+    });
+
+    container.addEventListener("click", function (event) {
+        const button = event.target.closest(".remove-med-item");
+        if (!button) return;
+
+        const rows = container.querySelectorAll(".medicine-row");
+        if (rows.length > 1) {
+            button.closest(".medicine-row").remove();
+        }
+
+        updateRemoveButtons();
+    });
+
+    updateRemoveButtons();
+});
+</script>
+{% endblock %}

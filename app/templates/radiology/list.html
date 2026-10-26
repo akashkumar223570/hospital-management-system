@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Radiology{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between"><h1>Radiology Orders</h1>
+<a href="{{ url_for('radiology.create_order') }}" class="btn btn-primary">New Order</a></div>
+<div class="card"><table class="table mb-0"><thead><tr><th>Order</th><th>Patient</th><th>Test</th><th>Date</th><th>Status</th><th></th></tr></thead>
+<tbody>{% for o in orders %}
+<tr><td>{{ o.order_number }}</td><td>{{ o.patient.full_name if o.patient else '' }}</td>
+<td>{{ o.test.name if o.test else '' }}</td>
+<td>{{ o.ordered_date.strftime('%d %b %Y') if o.ordered_date else '' }}</td>
+<td>{{ o.status }}</td>
+<td>{% if o.status != 'Reported' %}<a href="{{ url_for('radiology.report', id=o.id) }}" class="btn btn-sm btn-outline-primary">Report</a>{% endif %}</td></tr>
+{% else %}<tr><td colspan="6" class="text-center text-muted">No orders</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

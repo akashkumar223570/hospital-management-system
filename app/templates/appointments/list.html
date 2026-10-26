@@ -1,0 +1,489 @@
+
+{% extends "base.html" %}
+
+{% block title %}Appointment Management | City Care Hospital{% endblock %}
+
+{% block content %}
+<div class="appointment-page">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="appointment-heading-icon">
+                    <i class="bi bi-calendar2-check-fill"></i>
+                </span>
+                <h1 class="h3 fw-bold mb-0">Appointments</h1>
+            </div>
+            <p class="text-muted mb-0">
+                Schedule visits and manage patient appointments.
+            </p>
+        </div>
+
+        <a href="{{ url_for('appointments.book') }}"
+           class="btn btn-primary appointment-primary-btn">
+            <i class="bi bi-plus-lg me-2"></i>Book Appointment
+        </a>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card appointment-filter-card mb-4">
+        <div class="card-body p-3 p-md-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-funnel-fill text-primary"></i>
+                <h2 class="h6 fw-bold mb-0">Filter Appointments</h2>
+            </div>
+
+            <form method="GET" action="{{ url_for('appointments.list_appointments') }}">
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-12 col-md-4">
+                        <label for="appointmentDate" class="form-label">Appointment Date</label>
+                        <input type="date" id="appointmentDate" name="date"
+                               class="form-control"
+                               value="{{ date_filter or '' }}">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="appointmentStatus" class="form-label">Appointment Status</label>
+                        <select id="appointmentStatus" name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            <option value="Scheduled" {% if status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+                            <option value="Confirmed" {% if status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                            <option value="In Progress" {% if status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+                            <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="No-Show" {% if status == 'No-Show' %}selected{% endif %}>No-Show</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-search me-1"></i>Apply Filters
+                            </button>
+                            <a href="{{ url_for('appointments.list_appointments') }}"
+                               class="btn btn-outline-secondary"
+                               title="Clear filters">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointment Table -->
+    <div class="card appointment-table-card border-0">
+        <div class="card-header bg-white border-bottom p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h2 class="h5 fw-bold mb-1">Appointment Directory</h2>
+                    <p class="text-muted small mb-0">
+                        Review appointment schedules and update their status.
+                    </p>
+                </div>
+                <span class="appointment-record-label">
+                    <i class="bi bi-calendar-week me-1"></i>
+                    Appointment Records
+                </span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 appointment-table">
+                <thead>
+                    <tr>
+                        <th>Date &amp; Time</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Appointment Type</th>
+                        <th>Status</th>
+                        <th>Update Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for a in appointments.items %}
+                    <tr>
+                        <td>
+                            <div class="appointment-date">
+                                <i class="bi bi-calendar3 me-2"></i>{{ a.appointment_date or '-' }}
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-clock me-1"></i>{{ a.appointment_time or '-' }}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="appointment-person-icon patient-person-icon">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ a.patient.full_name if a.patient else 'Patient unavailable' }}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="appointment-person-icon doctor-person-icon">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">
+                                        {{ a.doctor.user.full_name if a.doctor and a.doctor.user else 'Doctor unavailable' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="appointment-type">
+                                {{ (a.appointment_type or 'General')|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% set current_status = a.status or 'Unknown' %}
+                            {% set status_key = current_status|lower|replace(' ', '-') %}
+                            <span class="appointment-status status-{{ status_key }}">
+                                <span class="status-dot"></span>
+                                {{ current_status|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('appointments.update_status', id=a.id) }}"
+                                  class="appointment-status-form">
+
+                                <label class="visually-hidden" for="status-{{ a.id }}">
+                                    Update status for appointment {{ a.id }}
+                                </label>
+
+                                <select id="status-{{ a.id }}"
+                                        name="status"
+                                        class="form-select form-select-sm appointment-status-select"
+                                        onchange="this.form.submit()">
+
+                                    {% for option in ['Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled', 'No-Show'] %}
+                                    <option value="{{ option }}"
+                                            {% if current_status|lower == option|lower %}selected{% endif %}>
+                                        {{ option }}
+                                    </option>
+                                    {% endfor %}
+
+                                    {% if current_status|lower not in ['scheduled', 'confirmed', 'in progress', 'completed', 'cancelled', 'no-show'] %}
+                                    <option value="{{ current_status }}" selected>
+                                        {{ current_status }}
+                                    </option>
+                                    {% endif %}
+                                </select>
+
+                                <noscript>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary mt-1">
+                                        Update
+                                    </button>
+                                </noscript>
+                            </form>
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="appointment-empty-icon mb-3">
+                                <i class="bi bi-calendar2-x"></i>
+                            </div>
+                            <h3 class="h6 fw-bold">No appointments found</h3>
+                            <p class="text-muted small mb-3">
+                                {% if date_filter or status %}
+                                Try changing the filters or reset them to see all appointments.
+                                {% else %}
+                                There are no appointments to display yet.
+                                {% endif %}
+                            </p>
+
+                            {% if date_filter or status %}
+                            <a href="{{ url_for('appointments.list_appointments') }}"
+                               class="btn btn-outline-secondary btn-sm me-2">
+                                Clear Filters
+                            </a>
+                            {% endif %}
+
+                            <a href="{{ url_for('appointments.book') }}"
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i>Book Appointment
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if appointments.pages > 1 %}
+        <div class="card-footer bg-white border-top p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <small class="text-muted">
+                    Page {{ appointments.page }} of {{ appointments.pages }}
+                </small>
+
+                <nav aria-label="Appointment pagination">
+                    <ul class="pagination pagination-sm mb-0">
+
+                        <li class="page-item {% if not appointments.has_prev %}disabled{% endif %}">
+                            {% if appointments.has_prev %}
+                            <a class="page-link"
+                               href="{{ url_for('appointments.list_appointments', page=appointments.prev_num, date=date_filter or '', status=status or '') }}"
+                               aria-label="Previous page">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                            {% else %}
+                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                            {% endif %}
+                        </li>
+
+                        {% for page_num in appointments.iter_pages() %}
+                            {% if page_num %}
+                            <li class="page-item {% if page_num == appointments.page %}active{% endif %}">
+                                <a class="page-link"
+                                   href="{{ url_for('appointments.list_appointments', page=page_num, date=date_filter or '', status=status or '') }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <li class="page-item {% if not appointments.has_next %}disabled{% endif %}">
+                            {% if appointments.has_next %}
+                            <a class="page-link"
+                               href="{{ url_for('appointments.list_appointments', page=appointments.next_num, date=date_filter or '', status=status or '') }}"
+                               aria-label="Next page">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            {% else %}
+                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                            {% endif %}
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.appointment-page {
+    color: #1e293b;
+}
+
+.appointment-heading-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #e8f1ff;
+    color: #2865b5;
+    font-size: 1.3rem;
+}
+
+.appointment-primary-btn {
+    padding: 10px 18px;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, .14);
+}
+
+.appointment-filter-card,
+.appointment-table-card {
+    overflow: hidden;
+    border: 1px solid #e6ebf2;
+    border-radius: 14px;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, .035);
+}
+
+.appointment-page .form-label {
+    margin-bottom: 7px;
+    color: #475569;
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.appointment-page .form-control,
+.appointment-page .form-select {
+    min-height: 41px;
+    border-color: #dce3ec;
+    border-radius: 8px;
+    font-size: .87rem;
+}
+
+.appointment-page .form-control:focus,
+.appointment-page .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .1);
+}
+
+.appointment-record-label {
+    padding: 8px 11px;
+    border: 1px solid #e3eaf2;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #52647a;
+    font-size: .77rem;
+    font-weight: 600;
+}
+
+.appointment-table thead th {
+    padding: 15px 16px;
+    background: #f7f9fc;
+    color: #64748b;
+    font-size: .73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+    white-space: nowrap;
+    border-bottom: 1px solid #e6ebf2;
+}
+
+.appointment-table tbody td {
+    padding: 15px 16px;
+    border-color: #edf1f5;
+    font-size: .85rem;
+}
+
+.appointment-date {
+    color: #334155;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.appointment-person-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 35px;
+    width: 35px;
+    height: 35px;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.patient-person-icon {
+    background: #e8f1ff;
+    color: #2865b5;
+}
+
+.doctor-person-icon {
+    background: #e9f8ef;
+    color: #16804a;
+}
+
+.appointment-type {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.appointment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.status-scheduled {
+    background: #eaf2ff;
+    color: #2859a6;
+}
+
+.status-confirmed {
+    background: #e7f8ee;
+    color: #167344;
+}
+
+.status-in-progress {
+    background: #fff4dc;
+    color: #96620c;
+}
+
+.status-completed {
+    background: #e5f7f4;
+    color: #087f70;
+}
+
+.status-cancelled {
+    background: #fff0f0;
+    color: #bf3343;
+}
+
+.status-no-show {
+    background: #f3eaff;
+    color: #7543a5;
+}
+
+.appointment-status-select {
+    min-width: 125px;
+    max-width: 155px;
+}
+
+.appointment-empty-icon {
+    color: #a3afbf;
+    font-size: 2.5rem;
+}
+
+.appointment-table-card .pagination .page-link {
+    min-width: 32px;
+    text-align: center;
+}
+
+@media (max-width: 767.98px) {
+    .appointment-page h1 {
+        font-size: 1.45rem;
+    }
+
+    .appointment-table thead th,
+    .appointment-table tbody td {
+        padding: 12px;
+    }
+
+    .appointment-status-select {
+        min-width: 115px;
+    }
+
+    .appointment-record-label {
+        font-size: .72rem;
+    }
+}
+</style>
+{% endblock %}

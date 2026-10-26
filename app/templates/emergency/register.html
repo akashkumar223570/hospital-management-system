@@ -1,0 +1,176 @@
+
+{% extends "base.html" %}
+
+{% block title %}Emergency Registration & Triage{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-danger fs-3">✚</span>
+                <h1 class="h3 fw-bold mb-0">Emergency Registration</h1>
+            </div>
+            <p class="text-muted mb-0">
+                Register an emergency visit, record triage details and assign a doctor.
+            </p>
+        </div>
+
+        <a href="{{ url_for('emergency.list_visits') }}"
+           class="btn btn-outline-secondary">
+            ← Back to Emergency
+        </a>
+    </div>
+
+    <!-- Emergency Notice -->
+    <div class="alert alert-danger border-0 rounded-4 d-flex gap-3 align-items-start mb-4">
+        <span class="fs-4">!</span>
+        <div>
+            <h6 class="fw-bold mb-1">Emergency Triage</h6>
+            <p class="mb-0 small">
+                Assess the patient's condition according to your hospital's triage protocol.
+                Critical cases require immediate clinical attention as appropriate.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST">
+
+        <!-- Patient Information -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="fw-bold mb-1">Patient &amp; Doctor Assignment</h5>
+                <small class="text-muted">Select the patient and, if available, the assigned doctor.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="patient_id" class="form-label fw-semibold">
+                            Patient <span class="text-danger">*</span>
+                        </label>
+
+                        <select name="patient_id" id="patient_id"
+                                class="form-select" required>
+                            <option value="">Select Patient</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">
+                                {{ p.full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <div class="form-text">
+                            Select the patient from the registered patient list.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="triage_level" class="form-label fw-semibold">
+                            Triage Level <span class="text-danger">*</span>
+                        </label>
+
+                        <select name="triage_level" id="triage_level"
+                                class="form-select" required>
+                            <option value="Critical">Critical</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="Semi-Urgent">Semi-Urgent</option>
+                            <option value="Non-Urgent">Non-Urgent</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="doctor_id" class="form-label fw-semibold">
+                            Assign Doctor
+                        </label>
+
+                        <select name="doctor_id" id="doctor_id" class="form-select">
+                            <option value="">Select Doctor</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">
+                                {{ d.user.full_name if d.user else d.id }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <div class="form-text">Optional, if not yet assigned.</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Chief Complaint -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="fw-bold mb-1">Chief Complaint</h5>
+                <small class="text-muted">Document the main reason for emergency presentation.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <label for="chief_complaint" class="form-label fw-semibold">
+                    Patient's Chief Complaint <span class="text-danger">*</span>
+                </label>
+
+                <textarea name="chief_complaint" id="chief_complaint"
+                          class="form-control" rows="4" required
+                          placeholder="Describe the presenting complaint..."></textarea>
+            </div>
+        </div>
+
+        <!-- Initial Assessment -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="fw-bold mb-1">Initial Assessment</h5>
+                <small class="text-muted">Enter available observations and additional triage notes.</small>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <label for="initial_vitals" class="form-label fw-semibold">
+                            Initial Vitals
+                        </label>
+
+                        <textarea name="initial_vitals" id="initial_vitals"
+                                  class="form-control" rows="4"
+                                  placeholder="Record available observations, such as BP, pulse, temperature and SpO₂..."></textarea>
+
+                        <div class="form-text">
+                            Enter actual measured values only.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="triage_notes" class="form-label fw-semibold">
+                            Triage Notes
+                        </label>
+
+                        <textarea name="triage_notes" id="triage_notes"
+                                  class="form-control" rows="4"
+                                  placeholder="Additional assessment notes or relevant observations..."></textarea>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+            <a href="{{ url_for('emergency.list_visits') }}"
+               class="btn btn-light border px-4">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-danger px-4">
+                Register Emergency
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

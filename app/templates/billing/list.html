@@ -1,0 +1,290 @@
+
+{% extends "base.html" %}
+
+{% block title %}Bills & Payments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary px-3 py-2 mb-2">
+                <i class="bi bi-receipt me-1"></i>
+                Billing Department
+            </span>
+            <h2 class="fw-bold mb-1">Bills & Payments</h2>
+            <p class="text-muted mb-0">
+                Manage patient invoices, billing dates, amounts, and payment status.
+            </p>
+        </div>
+
+        <a href="{{ url_for('billing.create') }}"
+           class="btn btn-primary rounded-3 px-4 py-2">
+            <i class="bi bi-plus-circle me-2"></i>
+            Create Bill
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3">
+                        <i class="bi bi-receipt-cutoff fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Bills on This Page</div>
+                        <div class="fs-3 fw-bold">{{ bills.items|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-success bg-opacity-10 text-success p-3">
+                        <i class="bi bi-currency-rupee fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Value of Bills on This Page</div>
+                        <div class="fs-3 fw-bold" id="pageBillTotal">₹0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bills Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom p-3 p-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Bill Register</h5>
+                    <p class="text-muted small mb-0">
+                        Invoice details and payment status
+                    </p>
+                </div>
+
+                <div class="input-group" style="max-width: 320px;">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="search"
+                        id="billSearch"
+                        class="form-control bg-light border-start-0"
+                        placeholder="Search bills..."
+                        aria-label="Search bills">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="billsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 px-md-4 py-3">Bill Number</th>
+                        <th class="py-3">Patient</th>
+                        <th class="py-3">Bill Date</th>
+                        <th class="py-3 text-end">Total Amount</th>
+                        <th class="py-3">Payment Status</th>
+                        <th class="py-3 text-end px-3 px-md-4">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for b in bills.items %}
+                    <tr>
+                        <td class="px-3 px-md-4">
+                            <span class="fw-bold text-primary">
+                                {{ b.bill_number }}
+                            </span>
+                            <div class="small text-muted">ID: {{ b.id }}</div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary
+                                            d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 42px; height: 42px;">
+                                    <i class="bi bi-person-vcard fs-5"></i>
+                                </div>
+                                <span class="fw-semibold">
+                                    {{ b.patient.full_name if b.patient else 'Patient not specified' }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td class="text-nowrap">
+                            <i class="bi bi-calendar3 text-muted me-1"></i>
+                            {{ b.bill_date.strftime('%d %b %Y') if b.bill_date else '—' }}
+                        </td>
+
+                        <td class="text-end fw-bold text-nowrap">
+                            ₹{{ '%.2f'|format(b.total_amount or 0) }}
+                        </td>
+
+                        <td>
+                            {% set payment_status = (b.payment_status or 'Unknown')|lower %}
+
+                            {% if payment_status in ['paid', 'completed', 'settled'] %}
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ b.payment_status }}
+                            </span>
+                            {% elif payment_status in ['pending', 'unpaid', 'due', 'partially_paid', 'partially paid'] %}
+                            <span class="badge rounded-pill text-bg-warning px-3 py-2">
+                                <i class="bi bi-hourglass-split me-1"></i>
+                                {{ b.payment_status }}
+                            </span>
+                            {% elif payment_status in ['cancelled', 'canceled', 'refunded'] %}
+                            <span class="badge rounded-pill text-bg-danger px-3 py-2">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {{ b.payment_status }}
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                                {{ b.payment_status or 'Unknown' }}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end px-3 px-md-4">
+                            <a href="{{ url_for('billing.view', id=b.id) }}"
+                               class="btn btn-sm btn-outline-primary rounded-3 px-3">
+                                <i class="bi bi-eye me-1"></i>
+                                View Bill
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center
+                                        justify-content-center mb-3"
+                                 style="width: 76px; height: 76px;">
+                                <i class="bi bi-receipt text-secondary fs-2"></i>
+                            </div>
+                            <h6 class="fw-bold">No Bills Found</h6>
+                            <p class="text-muted small mb-3">
+                                No bills are available on this page.
+                            </p>
+                            <a href="{{ url_for('billing.create') }}"
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Create First Bill
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer bg-white border-top p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <span class="text-muted small" id="billCount">
+                    Showing {{ bills.items|length }} bill(s) on this page
+                </span>
+
+                {% if bills.pages > 1 %}
+                <nav aria-label="Bills pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if not bills.has_prev %}disabled{% endif %}">
+                            {% if bills.has_prev %}
+                            <a class="page-link" href="{{ url_for('billing.list_bills', page=bills.prev_num) }}">
+                                Previous
+                            </a>
+                            {% else %}
+                            <span class="page-link">Previous</span>
+                            {% endif %}
+                        </li>
+
+                        {% for page_num in bills.iter_pages() %}
+                            {% if page_num %}
+                            <li class="page-item {% if page_num == bills.page %}active{% endif %}">
+                                <a class="page-link"
+                                   href="{{ url_for('billing.list_bills', page=page_num) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <li class="page-item {% if not bills.has_next %}disabled{% endif %}">
+                            {% if bills.has_next %}
+                            <a class="page-link" href="{{ url_for('billing.list_bills', page=bills.next_num) }}">
+                                Next
+                            </a>
+                            {% else %}
+                            <span class="page-link">Next</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+
+                <span class="text-muted small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    City Care Hospital
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Current-Page Summary -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("billSearch");
+    const table = document.getElementById("billsTable");
+    const countLabel = document.getElementById("billCount");
+    const totalLabel = document.getElementById("pageBillTotal");
+
+    if (!searchInput || !table || !countLabel || !totalLabel) return;
+
+    const rows = Array.from(table.querySelectorAll("tbody tr"))
+        .filter(row => !row.querySelector("td[colspan]"));
+
+    // Calculate the total for bills displayed on the current page.
+    let pageTotal = 0;
+
+    rows.forEach(function (row) {
+        const amountCell = row.cells[3];
+        const amountText = amountCell ? amountCell.textContent : "";
+        const amount = Number(amountText.replace(/[₹,\s]/g, ""));
+
+        if (Number.isFinite(amount)) pageTotal += amount;
+    });
+
+    totalLabel.textContent = "₹" + pageTotal.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleCount++;
+        });
+
+        countLabel.textContent =
+            "Showing " + visibleCount + " matching bill(s) on this page";
+    });
+});
+</script>
+{% endblock %}

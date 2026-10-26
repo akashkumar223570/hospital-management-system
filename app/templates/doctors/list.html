@@ -1,0 +1,183 @@
+
+{% extends "base.html" %}
+
+{% block title %}Doctors Directory{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary px-3 py-2 mb-2">
+                <i class="bi bi-heart-pulse me-1"></i>
+                Medical Staff
+            </span>
+            <h2 class="fw-bold mb-1">Doctors Directory</h2>
+            <p class="text-muted mb-0">
+                View doctor profiles, specializations, qualifications, and consultation fees.
+            </p>
+        </div>
+
+        <div class="border rounded-4 bg-white shadow-sm px-4 py-3">
+            <div class="small text-muted">Doctors Listed</div>
+            <div class="fs-3 fw-bold">{{ doctors|length }}</div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input
+                    type="search"
+                    id="doctorSearch"
+                    class="form-control bg-light border-start-0"
+                    placeholder="Search by doctor name, specialization, or qualification..."
+                    aria-label="Search doctors">
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctor Cards -->
+    <div class="row g-4" id="doctorGrid">
+
+        {% for d in doctors %}
+        <div class="col-12 col-md-6 col-xl-4 doctor-card">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+
+                <div class="card-body p-4">
+                    <!-- Doctor Identity -->
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary
+                                    d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width: 64px; height: 64px;">
+                            <i class="bi bi-person-badge fs-2"></i>
+                        </div>
+
+                        <div class="flex-grow-1 min-w-0">
+                            <h5 class="fw-bold mb-2 doctor-name">
+                                {{ d.user.full_name if d.user else 'Doctor' }}
+                            </h5>
+                            <span class="badge rounded-pill text-bg-info doctor-specialization">
+                                {{ d.specialization or 'General Practice' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Doctor Details -->
+                    <div class="border-top border-bottom py-3 mb-4">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="text-muted pt-1">
+                                <i class="bi bi-mortarboard fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted mb-1">Qualification</div>
+                                <div class="fw-semibold doctor-qualification">
+                                    {{ d.qualification or 'Not specified' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="text-muted pt-1">
+                                <i class="bi bi-briefcase fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted mb-1">Experience</div>
+                                <div class="fw-semibold">
+                                    {{ d.experience_years or 0 }} years
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="text-muted pt-1">
+                                <i class="bi bi-currency-rupee fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted mb-1">Consultation Fee</div>
+                                <div class="fs-5 fw-bold text-success">
+                                    ₹{{ '%.2f'|format(d.consultation_fee or 0) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Action -->
+                    <a href="{{ url_for('doctors.view', id=d.id) }}"
+                       class="btn btn-outline-primary rounded-3 w-100">
+                        <i class="bi bi-person-lines-fill me-2"></i>
+                        View Doctor Profile
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="col-12" id="noDoctorsMessage">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body text-center py-5">
+                    <div class="rounded-circle bg-light d-inline-flex align-items-center
+                                justify-content-center mb-3"
+                         style="width: 76px; height: 76px;">
+                        <i class="bi bi-person-badge text-secondary fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">No Doctors Found</h5>
+                    <p class="text-muted mb-0">
+                        There are currently no doctors available in the directory.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Search Empty State -->
+        {% if doctors %}
+        <div class="col-12 d-none" id="searchEmptyMessage">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-search display-5 text-muted"></i>
+                    <h5 class="fw-bold mt-3">No Matching Doctors</h5>
+                    <p class="text-muted mb-0">
+                        Try another name, specialization, or qualification.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Client-Side Search -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("doctorSearch");
+    const doctorCards = document.querySelectorAll(".doctor-card");
+    const emptyMessage = document.getElementById("searchEmptyMessage");
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        doctorCards.forEach(function (card) {
+            const matches = card.textContent.toLowerCase().includes(query);
+            card.classList.toggle("d-none", !matches);
+
+            if (matches) visibleCount++;
+        });
+
+        if (emptyMessage) {
+            emptyMessage.classList.toggle("d-none", visibleCount > 0);
+        }
+    });
+});
+</script>
+{% endblock %}

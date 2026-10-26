@@ -1,0 +1,254 @@
+
+{% extends "base.html" %}
+
+{% block title %}Medical Record #{{ record.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-primary fs-4">✚</span>
+                <h1 class="h3 fw-bold mb-0">Medical Record #{{ record.id }}</h1>
+            </div>
+            <p class="text-muted mb-0">
+                {{ record.patient.full_name if record.patient else 'Patient not available' }}
+                <span class="mx-1">·</span>
+                {{ record.visit_date.strftime('%d %b %Y') if record.visit_date else 'Date not available' }}
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                Print Record
+            </button>
+            <a href="{{ url_for('records.list_records') }}" class="btn btn-outline-secondary">
+                ← Back to Records
+            </a>
+        </div>
+    </div>
+
+    <!-- Record Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="text-muted small mb-2">PATIENT</div>
+                    <h5 class="fw-bold mb-1">
+                        {{ record.patient.full_name if record.patient else '—' }}
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Medical Record ID: #{{ record.id }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="text-muted small mb-2">ATTENDING DOCTOR</div>
+                    <h5 class="fw-bold mb-1">
+                        {{ record.doctor.user.full_name if record.doctor and record.doctor.user else '—' }}
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Visit date:
+                        {{ record.visit_date.strftime('%d %b %Y') if record.visit_date else '—' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Details -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+            <h5 class="fw-bold mb-1">Clinical Assessment</h5>
+            <small class="text-muted">Patient complaints, symptoms and diagnosis</small>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Chief Complaint</div>
+                    <div class="fw-medium">{{ record.chief_complaint or 'Not recorded' }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Symptoms</div>
+                    <div class="fw-medium">{{ record.symptoms or 'Not recorded' }}</div>
+                </div>
+
+                <div class="col-12">
+                    <hr class="my-0">
+                </div>
+
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Examination Findings</div>
+                    <div class="fw-medium">{{ record.examination_findings or 'Not recorded' }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Diagnosis</div>
+                    <div class="fw-medium">{{ record.diagnosis or 'Not recorded' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vital Signs -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+            <h5 class="fw-bold mb-1">Vital Signs</h5>
+            <small class="text-muted">Measurements documented during the visit</small>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small mb-2">Blood Pressure</div>
+                        <div class="fs-5 fw-bold">{{ record.blood_pressure or '—' }}</div>
+                        <div class="text-muted small">mmHg</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small mb-2">Pulse</div>
+                        <div class="fs-5 fw-bold">{{ record.pulse if record.pulse is not none else '—' }}</div>
+                        <div class="text-muted small">bpm</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small mb-2">Temperature</div>
+                        <div class="fs-5 fw-bold">{{ record.temperature if record.temperature is not none else '—' }}</div>
+                        <div class="text-muted small">°C</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small mb-2">Weight</div>
+                        <div class="fs-5 fw-bold">{{ record.weight if record.weight is not none else '—' }}</div>
+                        <div class="text-muted small">kg</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small mb-2">SpO₂</div>
+                        <div class="fs-5 fw-bold">{{ record.spo2 if record.spo2 is not none else '—' }}</div>
+                        <div class="text-muted small">%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Treatment Plan -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+            <h5 class="fw-bold mb-1">Treatment Plan</h5>
+        </div>
+        <div class="card-body p-4">
+            <p class="mb-0" style="white-space: pre-wrap;">{{ record.treatment_plan or 'No treatment plan recorded.' }}</p>
+        </div>
+    </div>
+
+    <!-- Prescriptions -->
+    {% if record.prescriptions.count() %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+            <h5 class="fw-bold mb-1">Prescriptions</h5>
+            <small class="text-muted">Medicines associated with this medical record</small>
+        </div>
+
+        <div class="card-body p-0">
+            {% for rx in record.prescriptions %}
+                {% if not loop.first %}
+                <hr class="my-0">
+                {% endif %}
+
+                <div class="p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Medicine</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in rx.items %}
+                                <tr>
+                                    <td class="fw-semibold">{{ item.medicine_name or '—' }}</td>
+                                    <td>{{ item.dosage or '—' }}</td>
+                                    <td>{{ item.frequency or '—' }}</td>
+                                    <td>{{ item.duration or '—' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        No medicine items recorded for this prescription.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 text-center">
+            <h6 class="fw-bold">No prescriptions recorded</h6>
+            <p class="text-muted mb-0">No prescription entries are associated with this medical record.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ url_for('records.list_records') }}" class="btn btn-primary px-4">
+            Back to Medical Records
+        </a>
+    </div>
+
+</div>
+
+<style>
+@media print {
+    .sidebar,
+    .topbar,
+    nav,
+    .btn,
+    button {
+        display: none !important;
+    }
+
+    body,
+    .container-fluid {
+        background: #fff !important;
+        padding: 0 !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+    }
+
+    .card-header {
+        background: #fff !important;
+    }
+}
+</style>
+{% endblock %}

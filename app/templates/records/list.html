@@ -1,0 +1,322 @@
+
+{% extends "base.html" %}
+
+{% block title %}Medical Records | City Care Hospital{% endblock %}
+
+{% block content %}
+<div class="medical-records-page">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="records-heading-icon">
+                    <i class="bi bi-journal-medical"></i>
+                </span>
+                <h1 class="h3 fw-bold mb-0">Medical Records</h1>
+            </div>
+            <p class="text-muted mb-0">
+                View and manage patient clinical records and visit diagnoses.
+            </p>
+        </div>
+
+        <a href="{{ url_for('records.create') }}"
+           class="btn btn-primary records-primary-btn">
+            <i class="bi bi-plus-lg me-2"></i>New Medical Record
+        </a>
+    </div>
+
+    <!-- Records Table -->
+    <div class="card records-table-card border-0">
+
+        <div class="card-header bg-white border-bottom p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h2 class="h5 fw-bold mb-1">Patient Clinical Records</h2>
+                    <p class="text-muted small mb-0">
+                        Visit dates, treating doctors and recorded diagnoses
+                    </p>
+                </div>
+
+                <span class="records-label">
+                    <i class="bi bi-shield-lock me-1"></i>Confidential Information
+                </span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 records-table">
+                <thead>
+                    <tr>
+                        <th>Visit Date</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Diagnosis / Complaint</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for r in records.items %}
+                    <tr>
+                        <td>
+                            <div class="records-date">
+                                <i class="bi bi-calendar3 me-2"></i>
+                                {{ r.visit_date.strftime('%d %b %Y') if r.visit_date else '-' }}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="records-person-icon patient-record-icon">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ r.patient.full_name if r.patient else 'Patient unavailable' }}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="records-person-icon doctor-record-icon">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ r.doctor.user.full_name if r.doctor and r.doctor.user else 'Doctor unavailable' }}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="diagnosis-text">
+                                {{ r.diagnosis or r.chief_complaint or 'Not recorded' }}
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <a href="{{ url_for('records.view', id=r.id) }}"
+                               class="btn btn-sm btn-outline-primary records-view-btn"
+                               aria-label="View medical record"
+                               title="View medical record">
+                                <i class="bi bi-eye me-1"></i>View Record
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="records-empty-icon mb-3">
+                                <i class="bi bi-journal-x"></i>
+                            </div>
+                            <h3 class="h6 fw-bold">No medical records found</h3>
+                            <p class="text-muted small mb-3">
+                                Clinical records will appear here after they have been created.
+                            </p>
+                            <a href="{{ url_for('records.create') }}"
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i>Create Medical Record
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if records.pages > 1 %}
+        <div class="card-footer bg-white border-top p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <small class="text-muted">
+                    Page {{ records.page }} of {{ records.pages }}
+                </small>
+
+                <nav aria-label="Medical records pagination">
+                    <ul class="pagination pagination-sm mb-0">
+
+                        <li class="page-item {% if not records.has_prev %}disabled{% endif %}">
+                            {% if records.has_prev %}
+                            <a class="page-link"
+                               href="{{ url_for('records.list_records', page=records.prev_num) }}"
+                               aria-label="Previous page">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                            {% else %}
+                            <span class="page-link">
+                                <i class="bi bi-chevron-left"></i>
+                            </span>
+                            {% endif %}
+                        </li>
+
+                        {% for page_num in records.iter_pages() %}
+                            {% if page_num %}
+                            <li class="page-item {% if page_num == records.page %}active{% endif %}">
+                                <a class="page-link"
+                                   href="{{ url_for('records.list_records', page=page_num) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <li class="page-item {% if not records.has_next %}disabled{% endif %}">
+                            {% if records.has_next %}
+                            <a class="page-link"
+                               href="{{ url_for('records.list_records', page=records.next_num) }}"
+                               aria-label="Next page">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            {% else %}
+                            <span class="page-link">
+                                <i class="bi bi-chevron-right"></i>
+                            </span>
+                            {% endif %}
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card-footer records-privacy-footer">
+            <i class="bi bi-shield-check me-2"></i>
+            Patient clinical information should only be accessed by authorized personnel.
+        </div>
+
+    </div>
+</div>
+
+<style>
+.medical-records-page {
+    color: #1e293b;
+}
+
+.records-heading-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #e8f1ff;
+    color: #2865b5;
+    font-size: 1.3rem;
+}
+
+.records-primary-btn {
+    padding: 10px 17px;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, .14);
+}
+
+.records-table-card {
+    overflow: hidden;
+    border: 1px solid #e6ebf2;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .04);
+}
+
+.records-label {
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #52647a;
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.records-table thead th {
+    padding: 15px 16px;
+    background: #f7f9fc;
+    color: #64748b;
+    font-size: .73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+    white-space: nowrap;
+    border-bottom: 1px solid #e6ebf2;
+}
+
+.records-table tbody td {
+    padding: 16px;
+    border-color: #edf1f5;
+    font-size: .85rem;
+}
+
+.records-date {
+    color: #334155;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.records-person-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.patient-record-icon {
+    background: #e8f1ff;
+    color: #2865b5;
+}
+
+.doctor-record-icon {
+    background: #e9f8ef;
+    color: #16804a;
+}
+
+.diagnosis-text {
+    min-width: 150px;
+    max-width: 380px;
+    color: #334155;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.records-view-btn {
+    white-space: nowrap;
+    border-radius: 8px;
+}
+
+.records-empty-icon {
+    color: #a3afbf;
+    font-size: 2.5rem;
+}
+
+.records-table-card .pagination .page-link {
+    min-width: 32px;
+    text-align: center;
+}
+
+.records-privacy-footer {
+    padding: 12px 16px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: .78rem;
+}
+
+@media (max-width: 767.98px) {
+    .medical-records-page h1 {
+        font-size: 1.45rem;
+    }
+
+    .records-table thead th,
+    .records-table tbody td {
+        padding: 12px;
+    }
+}
+</style>
+{% endblock %}

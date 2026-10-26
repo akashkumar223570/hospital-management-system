@@ -1,0 +1,229 @@
+
+{% extends "base.html" %}
+
+{% block title %}Staff Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary px-3 py-2 mb-2">
+                <i class="bi bi-calendar-check me-1"></i>
+                Human Resources
+            </span>
+            <h2 class="fw-bold mb-1">Staff Attendance</h2>
+            <p class="text-muted mb-0">
+                Review staff check-in times, check-out times, and attendance status.
+            </p>
+        </div>
+
+        <div class="border rounded-4 bg-white shadow-sm px-4 py-3">
+            <div class="small text-muted">Attendance Date</div>
+            <div class="fs-5 fw-bold">
+                <i class="bi bi-calendar3 text-primary me-2"></i>{{ today }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3">
+                        <i class="bi bi-people fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Attendance Records</div>
+                        <div class="fs-3 fw-bold">{{ records|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-success bg-opacity-10 text-success p-3">
+                        <i class="bi bi-clock-history fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Staff Checked In</div>
+                        <div class="fs-3 fw-bold">
+                            {% set checked_in = namespace(value=0) %}
+                            {% for r in records %}
+                                {% if r.check_in and not r.check_out %}
+                                    {% set checked_in.value = checked_in.value + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ checked_in.value }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom p-3 p-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Daily Attendance Register</h5>
+                    <p class="text-muted small mb-0">
+                        Staff attendance records for {{ today }}
+                    </p>
+                </div>
+
+                <div class="input-group" style="max-width: 320px;">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="search"
+                        id="attendanceSearch"
+                        class="form-control bg-light border-start-0"
+                        placeholder="Search staff or status..."
+                        aria-label="Search attendance records">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="attendanceTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 px-md-4 py-3">Staff Member</th>
+                        <th class="py-3">Check In</th>
+                        <th class="py-3">Check Out</th>
+                        <th class="py-3">Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td class="px-3 px-md-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary
+                                            d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 44px; height: 44px;">
+                                    <i class="bi bi-person-badge fs-5"></i>
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ r.staff.user.full_name if r.staff and r.staff.user else 'Staff not specified' }}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="py-3">
+                            {% if r.check_in %}
+                            <span class="text-success fw-semibold text-nowrap">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                {{ r.check_in.strftime('%H:%M') }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3">
+                            {% if r.check_out %}
+                            <span class="text-secondary fw-semibold text-nowrap">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                {{ r.check_out.strftime('%H:%M') }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">Not checked out</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3">
+                            {% set attendance_status = (r.status or 'Unknown')|lower %}
+
+                            {% if attendance_status in ['present', 'on duty', 'on-duty'] %}
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ r.status }}
+                            </span>
+                            {% elif attendance_status in ['absent', 'leave'] %}
+                            <span class="badge rounded-pill text-bg-danger px-3 py-2">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {{ r.status }}
+                            </span>
+                            {% elif attendance_status in ['late', 'half day', 'half-day'] %}
+                            <span class="badge rounded-pill text-bg-warning px-3 py-2">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ r.status }}
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                                {{ r.status or 'Unknown' }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center
+                                        justify-content-center mb-3"
+                                 style="width: 76px; height: 76px;">
+                                <i class="bi bi-calendar-x text-secondary fs-2"></i>
+                            </div>
+                            <h6 class="fw-bold">No Attendance Records</h6>
+                            <p class="text-muted small mb-0">
+                                No attendance records were found for {{ today }}.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white border-top px-3 px-md-4 py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="text-muted small" id="attendanceCount">
+                    Showing {{ records|length }} record(s)
+                </span>
+                <span class="text-muted small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    City Care Hospital
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client-Side Search -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("attendanceSearch");
+    const table = document.getElementById("attendanceTable");
+    const countLabel = document.getElementById("attendanceCount");
+
+    if (!searchInput || !table || !countLabel) return;
+
+    const rows = Array.from(table.querySelectorAll("tbody tr"))
+        .filter(row => !row.querySelector("td[colspan]"));
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleCount++;
+        });
+
+        countLabel.textContent = "Showing " + visibleCount + " record(s)";
+    });
+});
+</script>
+{% endblock %}

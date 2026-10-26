@@ -1,0 +1,251 @@
+
+{% extends "base.html" %}
+
+{% block title %}Create Lab Order{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-primary fs-3">⚕</span>
+                <h1 class="h3 fw-bold mb-0">Create Lab Order</h1>
+            </div>
+            <p class="text-muted mb-0">
+                Select a patient, assign a doctor and choose the required laboratory tests.
+            </p>
+        </div>
+
+        <a href="{{ url_for('lab.list_orders') }}"
+           class="btn btn-outline-secondary">
+            ← Back to Lab Orders
+        </a>
+    </div>
+
+    <form method="POST">
+
+        <!-- Patient and Order Details -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="fw-bold mb-1">Order Information</h5>
+                <small class="text-muted">
+                    Enter the patient details and select the order priority.
+                </small>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="patient_id" class="form-label fw-semibold">
+                            Patient <span class="text-danger">*</span>
+                        </label>
+
+                        <select name="patient_id" id="patient_id"
+                                class="form-select" required>
+                            <option value="">Select Patient</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">{{ p.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="doctor_id" class="form-label fw-semibold">
+                            Ordering Doctor
+                        </label>
+
+                        <select name="doctor_id" id="doctor_id" class="form-select">
+                            <option value="">Select Doctor</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">
+                                {{ d.user.full_name if d.user else d.id }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="priority" class="form-label fw-semibold">
+                            Priority
+                        </label>
+
+                        <select name="priority" id="priority" class="form-select">
+                            <option value="Routine">Routine</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="STAT">STAT</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Laboratory Tests -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-1">Select Laboratory Tests</h5>
+                        <small class="text-muted">
+                            Select one or more tests for this order.
+                        </small>
+                    </div>
+
+                    <span class="badge text-bg-light border text-dark">
+                        {{ tests|length }} available
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+
+                {% if tests %}
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" id="select-all-tests"
+                            class="btn btn-sm btn-outline-primary">
+                        Select All
+                    </button>
+
+                    <button type="button" id="clear-tests"
+                            class="btn btn-sm btn-outline-secondary">
+                        Clear Selection
+                    </button>
+
+                    <span class="small text-muted align-self-center ms-sm-2"
+                          id="selected-test-count"
+                          aria-live="polite">
+                        0 tests selected
+                    </span>
+                </div>
+
+                <div class="row g-3" id="lab-test-list">
+                    {% for t in tests %}
+                    <div class="col-sm-6 col-xl-4">
+                        <label for="t{{ t.id }}"
+                               class="border rounded-3 p-3 d-flex align-items-start gap-3 h-100 w-100"
+                               style="cursor: pointer;">
+
+                            <input class="form-check-input mt-1 lab-test-checkbox"
+                                   type="checkbox"
+                                   name="test_ids[]"
+                                   value="{{ t.id }}"
+                                   id="t{{ t.id }}">
+
+                            <span class="flex-grow-1">
+                                <span class="fw-semibold d-block">{{ t.name }}</span>
+                                <span class="text-muted small">Laboratory test</span>
+                            </span>
+
+                            <span class="fw-bold text-primary text-nowrap">
+                                ₹{{ t.price }}
+                            </span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% else %}
+                <div class="text-center py-4">
+                    <div class="fs-1 text-muted mb-2">⚕</div>
+                    <h6 class="fw-bold">No tests available</h6>
+                    <p class="text-muted mb-0">
+                        There are currently no laboratory tests to select.
+                    </p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <!-- Clinical Notes -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 rounded-top-4">
+                <h5 class="fw-bold mb-1">Clinical Notes</h5>
+                <small class="text-muted">
+                    Add relevant clinical information for the laboratory team.
+                </small>
+            </div>
+
+            <div class="card-body p-4">
+                <label for="clinical_notes" class="form-label fw-semibold">
+                    Clinical Notes
+                </label>
+
+                <textarea name="clinical_notes" id="clinical_notes"
+                          class="form-control" rows="4"
+                          placeholder="Enter relevant clinical notes or test-related information..."></textarea>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+            <a href="{{ url_for('lab.list_orders') }}"
+               class="btn btn-light border px-4">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-primary px-4">
+                Create Lab Order
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const checkboxes = document.querySelectorAll(".lab-test-checkbox");
+    const countLabel = document.getElementById("selected-test-count");
+    const selectAllButton = document.getElementById("select-all-tests");
+    const clearButton = document.getElementById("clear-tests");
+
+    function updateSelection() {
+        const selectedCount = document.querySelectorAll(
+            ".lab-test-checkbox:checked"
+        ).length;
+
+        if (countLabel) {
+            countLabel.textContent =
+                selectedCount + (selectedCount === 1
+                    ? " test selected"
+                    : " tests selected");
+        }
+
+        checkboxes.forEach(function (checkbox) {
+            const label = checkbox.closest("label");
+            if (label) {
+                label.classList.toggle("border-primary", checkbox.checked);
+                label.classList.toggle("bg-light", checkbox.checked);
+            }
+        });
+    }
+
+    if (selectAllButton) {
+        selectAllButton.addEventListener("click", function () {
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = true;
+            });
+            updateSelection();
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener("click", function () {
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = false;
+            });
+            updateSelection();
+        });
+    }
+
+    checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener("change", updateSelection);
+    });
+
+    updateSelection();
+});
+</script>
+{% endblock %}
